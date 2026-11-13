@@ -3,7 +3,7 @@
 .roseStyleButtons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.roseStyleButtons button{padding:9px 6px}.growthBar{position:absolute;left:16px;bottom:66px;width:min(360px,calc(100% - 32px));z-index:5;background:#102821df;border:1px solid #42634f;border-radius:12px;padding:9px 12px;display:flex;align-items:center;gap:10px;color:#e1f2e7;font-size:12px}.growthBar input{flex:1;min-width:60px;accent-color:#93cda8}.growthBar output{min-width:34px;text-align:right}
 
 [hidden]{display:none !important;}
-</style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js"}}</script></head><body><header><strong>✿ StatFlowers <span style="color:#89bc9d">3D</span></strong><small>StatSilk · Geometry · Phyllotaxis</small></header><main><section class="viewer"><canvas id="scene"></canvas><div class="overlay"><h2 id="flowerLabel">Rose</h2><p id="symmetry">Fibonacci spiral</p></div><div class="viewbuttons"><button id="topBtn">◎ Top view</button><button id="sideBtn">◈ 3D view</button><button id="resetView">Reset view</button><button id="replayGrowth">▶ Watch bloom open</button></div><div class="growthBar"><label for="growthStage">Bud → bloom</label><input id="growthStage" aria-label="Growth stage" type="range" min="0" max="100" value="100" step="1"><output id="growthValue">100%</output></div><div class="inset"><h3>MATHEMATICAL ARRANGEMENT</h3><canvas id="patternCanvas"></canvas></div><div class="under"><small>Drag to rotate · Scroll to zoom · All edits update instantly</small><button id="download">Save PNG</button></div></section><aside class="panel"><p class="eyebrow">Choose flower family</p><div id="families" class="families"></div><p class="sectionTitle" id="angleTitle">Floret spiral</p><div id="angles" class="angles"></div><p id="angleHelp" class="angleHelp"></p><section id="roseStyles" class="roseStyles" hidden><p class="sectionTitle">Rose form</p><div class="roseStyleButtons" id="roseStyleButtons"></div><p id="roseStyleHelp" class="angleHelp"></p></section><div id="controls" class="controls"></div><p class="sectionTitle">Botanical explanation</p><div class="science" id="science"></div><p class="note" role="note" style="border-left:3px solid #7eac95;padding:7px 10px;background:#193329;border-radius:5px"><strong>Experimental model.</strong> Flower forms and bloom animations are illustrative approximations, not mathematically exact reconstructions or predictive plant biology.</p><p class="note">The model is an artistic 3D geometry experiment, not a predictive plant-growth simulation. Golden-angle phyllotaxis applies to packed florets in composite flower heads; flowers with few petals commonly show whorl symmetry.</p><div class="actions"><button id="resetFlower">Reset flower</button><button id="copySettings">Copy parameters</button><span id="copied"></span></div></aside></main><script type="module">
+.roseStageLabel{position:absolute;left:16px;bottom:120px;z-index:6;color:#dceee5;background:#14352dcf;border:1px solid #3c6152;border-radius:8px;padding:7px 10px;font-size:12px;pointer-events:none} </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js"}}</script></head><body><header><strong>✿ StatFlowers <span style="color:#89bc9d">3D</span></strong><small>StatSilk · Geometry · Phyllotaxis</small></header><main><section class="viewer"><canvas id="scene"></canvas><div class="overlay"><h2 id="flowerLabel">Rose</h2><p id="symmetry">Fibonacci spiral</p></div><div class="viewbuttons"><button id="topBtn">◎ Top view</button><button id="sideBtn">◈ 3D view</button><button id="resetView">Reset view</button><button id="replayGrowth">▶ Watch bloom open</button></div><div class="growthBar"><label for="growthStage">Bud → bloom</label><input id="growthStage" aria-label="Growth stage" type="range" min="0" max="100" value="100" step="1"><output id="growthValue">100%</output></div><div id="roseStageLabel" class="roseStageLabel" aria-live="polite" hidden></div><div class="inset"><h3>MATHEMATICAL ARRANGEMENT</h3><canvas id="patternCanvas"></canvas></div><div class="under"><small>Drag to rotate · Scroll to zoom · All edits update instantly</small><button id="download">Save PNG</button></div></section><aside class="panel"><p class="eyebrow">Choose flower family</p><div id="families" class="families"></div><p class="sectionTitle" id="angleTitle">Floret spiral</p><div id="angles" class="angles"></div><p id="angleHelp" class="angleHelp"></p><section id="roseStyles" class="roseStyles" hidden><p class="sectionTitle">Rose form</p><div class="roseStyleButtons" id="roseStyleButtons"></div><p id="roseStyleHelp" class="angleHelp"></p></section><div id="controls" class="controls"></div><p class="sectionTitle">Botanical explanation</p><div class="science" id="science"></div><p class="note" role="note" style="border-left:3px solid #7eac95;padding:7px 10px;background:#193329;border-radius:5px"><strong>Experimental model.</strong> Flower forms and bloom animations are illustrative approximations, not mathematically exact reconstructions or predictive plant biology.</p><p class="note">The model is an artistic 3D geometry experiment, not a predictive plant-growth simulation. Golden-angle phyllotaxis applies to packed florets in composite flower heads; flowers with few petals commonly show whorl symmetry.</p><div class="actions"><button id="resetFlower">Reset flower</button><button id="copySettings">Copy parameters</button><span id="copied"></span></div></aside></main><script type="module">
 
 const TAU=Math.PI*2, clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),rad=d=>d*Math.PI/180;
 const golden=137.507764;
@@ -96,7 +96,7 @@ function organicPetal(parent,fn,hex,layer,seed,thickness=.012){
    // Pale base, slightly saturated rim, and faint natural irregularity.
    c.lerp(new THREE.Color('#ffede1'),(.32*(1-t)*(1-t)));
    // Pigment accumulates toward the curled lip; subtle separate shade for each overlapping petal.
-   c.offsetHSL(.003*Math.sin(seed*1.9),-.015, .048*Math.sin(seed*1.5+layer*.83)+.075*t-.105*Math.abs(u)*t);
+   c.offsetHSL(.003*Math.sin(seed*1.9),-.015, .082*Math.sin(seed*1.5+layer*.83)+.075*t-.11*Math.abs(u)*t);
    col.push(c.r,c.g,c.b);
  }
  geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
@@ -104,78 +104,67 @@ function organicPetal(parent,fn,hex,layer,seed,thickness=.012){
  const mesh=new THREE.Mesh(geo,m);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
 }
 function rose(group,p,headY){
- const layers=Math.max(4,Math.round(p.layers));
- const n=Math.max(5,Math.min(10,p.petals));
- const age=clamp(p.growth??1,0,1), openness=p.open/100;
- const style=p.roseStyle||'natural', spiral=style==='spiral', rosette=style==='rosette', isCup=style==='cup';
+ const age=clamp(p.growth??1,0,1);
  const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x)};
-
- // Receptacle and hypanthium (the green cup under the flower)
- const receptacle=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),material('#5b9c57'));
- receptacle.scale.set(.17,.22,.17); receptacle.position.y=headY+.01; group.add(receptacle);
- const cup=new THREE.Mesh(new THREE.CylinderGeometry(.11,.16,.20,22),material('#79b26a'));
- cup.position.y=headY+.10; group.add(cup);
-
- // Stage 1: sepals enclose the young bud, then reflex backwards.
- const sepalOpen=smooth((age-.10)/.25);
+ const phase=(start,end)=>smooth((age-start)/(end-start));
+ const layers=Math.max(4,Math.round(p.layers));
+ const style=p.roseStyle||'natural';
+ const isCup=style==='cup', isRosette=style==='rosette', isSpiral=style==='spiral';
+ const matureOpen=p.open/100, countBase=Math.max(5,Math.min(11,p.petals));
+ const hyp=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),material('#53904c'));
+ hyp.scale.set(.20,.24,.20);hyp.position.y=headY+.07;hyp.castShadow=true;group.add(hyp);
+ const sepalSpread=phase(.12,.38);
  for(let k=0;k<5;k++){
-   const a=k*TAU/5 + .08*Math.sin(k*1.9);
-   const sepal=(t,u)=>{
-     const len=.55+.08*sepalOpen;
-     const w=(.024+.055*Math.sin(Math.PI*t))*(1-.15*t)*u;
-     const lift=.12 + len*t;
-     const reflex=.18 + .90*sepalOpen*Math.pow(t,1.35);
-     const rad=.10 + (.02+.06*sepalOpen)*t;
-     const th=a + (u*.06)*(1-t);
-     const y=headY+.06 + lift - reflex*Math.pow(t,1.55);
-     return [rad*Math.cos(th)-w*Math.sin(th), y, rad*Math.sin(th)+w*Math.cos(th)];
+   const phi=k*TAU/5+.12;
+   const fn=(t,u)=>{
+     const e=Math.sin(Math.PI*Math.pow(t,.72));
+     const w=(.028+.205*Math.pow(Math.max(0,e),.78))*u;
+     const baseR=.14;
+     const closedR=baseR+.17*Math.sin(Math.PI*t*.78)-.12*Math.pow(t,4);
+     const reflexR=baseR+.15*t+.40*Math.pow(t,1.7);
+     const rr=closedR*(1-sepalSpread)+reflexR*sepalSpread;
+     const closedY=headY+.12+.76*t-.10*t*t;
+     const reflexY=headY+.12+.40*t-.51*Math.pow(t,2);
+     const y=closedY*(1-sepalSpread)+reflexY*sepalSpread+.025*(1-u*u)*Math.sin(Math.PI*t);
+     const a=phi+(.035*u)*t;
+     return [rr*Math.cos(a)-w*Math.sin(a),y,rr*Math.sin(a)+w*Math.cos(a)];
    };
-   group.add(new THREE.Mesh(meshOfSurface(sepal,20,8,.008),material('#6cae59')));
+   const sep=new THREE.Mesh(meshOfSurface(fn,28,18,.015),material(k%2?'#649f57':'#75ad60'));
+   sep.castShadow=true;sep.receiveShadow=true;group.add(sep);
  }
-
- // Small inner bud core: initially hidden by sepals, then remains inside the flower.
- const core=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),material(p.color));
- core.scale.set(.09+.04*age,.18+.06*age,.09+.04*age);
- core.position.y=headY+.24; group.add(core);
-
- // Stage 2 onward: red petals emerge from low on the cup and unfurl in layers.
+ const redBudReveal=phase(.16,.31);
+ const core=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),material(p.color));
+ core.scale.set(.12+.04*age,.23+.045*age,.12+.04*age);
+ core.position.y=headY+.38;core.visible=redBudReveal>.02;group.add(core);
  for(let layer=0;layer<layers;layer++){
-   const q=layer/(layers-1);                 // 0 inner, 1 outer
-   const outerFirst=q;                       // outer layers mature first
-   const stageStart=.18 + (1-q)*(isCup?.42:.28);        // outer petals start opening earlier
-   const stageSpan=.33 + q*.10;
-   const maturity=smooth((age-stageStart)/stageSpan);
-   const open=openness*maturity;
-   const count=Math.max(4,Math.round(n*(rosette?.88:.70)+(rosette?.12:.24)*n*q));
-   const shoulder=.055 + .085*q;            // low attachment on the cup
-   const startY=headY+.08 + .03*q;
-   const petalHeight=(.62 + .26*q)*(rosette?.80:isCup?1.13:1)*(.55 + .45*age);
-   const flare=(.02 + (.12+.22*q)*open)*(spiral?1.10:rosette?1.26:isCup?.67:1);    // widening toward the top as it opens
-   const maxW=(.08+.16*q)*(rosette?1.16:isCup?.92:1)*(p.width/92)*(7/count)**.22*(.35+.65*maturity);
-   for(let j=0;j<count;j++){
-     const phi=j*TAU/count + layer*(spiral?2.39996:1.95) + .06*Math.sin(j*1.7+layer*.6);
-     const seed=31*layer+j;
+   const q=layer/(layers-1),outerTime=1-q;
+   const emergence=phase(.17+.12*outerTime,.34+.15*outerTime);
+   const opening=phase(.34+.24*outerTime,.74+.22*outerTime)*matureOpen;
+   const petals=Math.max(4,Math.round(countBase*(.72+.23*q)));
+   const rootR=.075+.070*q,baseY=headY+.12+.025*q;
+   const adultHeight=(.73-.20*q)*(isCup?1.17:isRosette?.83:1);
+   const height=adultHeight*(.32+.68*emergence);
+   const width=(.14+.155*q)*(p.width/92)*(7/petals)**.22*(.27+.73*emergence)*(isRosette?1.10:1);
+   const flareScale=isCup?.72:isRosette?1.35:1;
+   const finalReach=(.20+.62*q)*opening*flareScale;
+   for(let j=0;j<petals;j++){
+     const seed=layer*29+j,phi=j*TAU/petals+layer*(isSpiral?2.40:2.12)+.04*Math.sin(seed*1.47);
      const fn=(t,u)=>{
-       const b=smooth(t);
-       const upper=smooth((t-.50)/.50);
-       // Early stage: narrow petal. Later: broad upper lamina.
-       const widthProfile=(.10+.90*smooth(t/.38))*(.98-.08*smooth((t-.90)/.10));
-       const lateral=maxW*u*widthProfile;
-       let r=shoulder + (.02+.05*q)*t + flare*(.20*b + .80*upper);
-       r += (p.curl/100)*.02*open*Math.pow(t,4.5);
-       // Main vertical growth from the lower cup, with outer lip eventually bending outward/downward.
-       let y=startY + petalHeight*(.98*t - (rosette?.22:.10)*q*t*t);
-       y += .08*(1-u*u)*Math.sin(Math.PI*t);                 // cup
-       y -= (.02 + (rosette?.25:isCup?.08:.15)*q)*open*Math.pow(t,3.2);             // lip droop as bloom opens
-       y -= .04*u*u*Math.pow(t,4.2)*( .30 + .70*open );     // rounded top margin
-       y += (p.ruffle/100)*.015*Math.pow(t,3)*Math.pow(Math.abs(u),3)*Math.sin(6*u+seed*.9);
-       const az=phi + (1-q)*((spiral?.43:.22)*(1-t)) + (p.twist/100)*.042*t*t;
-       // Closed bud: petals hug the axis. Open flower: upper petal rotates out and around.
-       const axisPull=(1-maturity)*(.05 + .10*q)*(1-t);
-       r -= axisPull;
-       return [r*Math.cos(az)-lateral*Math.sin(az), y, r*Math.sin(az)+lateral*Math.cos(az)];
+       const tt=smooth(t),top=smooth((t-.43)/.57);
+       const widthEnv=(.12+.88*smooth(t/.42))*(1-.13*smooth((t-.92)/.08));
+       const w=width*u*widthEnv;
+       const closedR=rootR+.07*t;
+       let rr=closedR+finalReach*(.13*tt+.87*top);
+       rr+=.035*(p.curl/100)*opening*Math.pow(t,4);
+       let y=baseY+height*(t-.10*q*t*t);
+       y-=opening*(.04+.24*q)*Math.pow(t,3.25);
+       y+=.070*(1-u*u)*Math.sin(Math.PI*t);
+       y-=.044*u*u*Math.pow(t,4)*opening;
+       y+=(p.ruffle/100)*.020*Math.pow(t,3)*Math.pow(Math.abs(u),3)*Math.sin(6*u+seed*.77);
+       const az=phi+(1-q)*(.20*(1-t))+(p.twist/100)*.045*t*t;
+       return [rr*Math.cos(az)-w*Math.sin(az),y,rr*Math.sin(az)+w*Math.cos(az)];
      };
-     organicPetal(group,fn,p.color,layer,seed,.010+p.thickness/100*.014);
+     if(emergence>.005)organicPetal(group,fn,p.color,layer,seed,.008+p.thickness/100*.016);
    }
  }
 }
@@ -315,6 +304,7 @@ function renderFlower(stage=1){disposeFlower();flower=makeFlower(family,{...p,gr
  $('angleHelp').textContent='The angle changes the arrangement of small florets in the flower head. 137.508° is the golden angle. Flowers with just a few petals use whorl symmetry instead.';
  $('symmetry').textContent=p.kind==='disc'?'Vogel spiral, many florets':`${p.petals}-part outer symmetry`;
  if($('growthStage')){$('growthStage').value=Math.round(stage*100);$('growthValue').textContent=Math.round(stage*100)+'%';}
+ const roseStage=$('roseStageLabel');if(roseStage){roseStage.hidden=family!=='rose';if(family==='rose')roseStage.textContent=stage<.12?'1 · Closed green bud':stage<.30?'2 · Green sepals peel back':stage<.48?'3 · Red bud emerges':stage<.70?'4 · Outer petals unfurl':stage<.90?'5 · Inner layers revealed':'6 · Layered open rose';}
  refreshOverview();render();}
 function replayGrowth(){cancelAnimationFrame(animationId);const token=++animationToken;const start=performance.now(),duration=3000;let last=-1000;
  function frame(now){if(token!==animationToken)return;const stage=Math.min(1,(now-start)/duration);if(now-last>65||stage===1){renderFlower(stage);last=now;}if(stage<1)animationId=requestAnimationFrame(frame)}animationId=requestAnimationFrame(frame)}
