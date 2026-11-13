@@ -9,6 +9,11 @@ Notable changes to StatFlowers are documented here. This project is experimental
 - Rose growth-stage descriptions alongside the bud-to-bloom timeline.
 
 ### Changed
+- Deepened the rose's mature bowl-shaped profile and added subtle per-petal variation to roses, tulips, lilies, poppies and composite flowers.
+- Changed tulip tepals to gently bulging curved forms; removed the conspicuous green spherical receptacle beneath tulips, and linked tulip bud rise to stem elongation.
+- Improved gerbera petal-tip rounding with denser surface sampling; slightly zoomed out its default view.
+- Replaced the Flower Size slider with discreet +/− camera zoom buttons and a percentage indicator.
+- Moved the Three.js application code into `app.js` so GitHub recognizes JavaScript alongside HTML.
 - Reworked the default gerbera toward a single-like, two-tier bloom with fewer, wider ray florets and natural variations in length, curvature and droop, informed by gerbera floral classifications.
 - Reduced the initial rose green-bud proportions while enlarging the rounded, open outer petal layers.
 - Rebuilt tulip tepals as two nested, curved whorls rather than intersecting tangent planes, retaining the green-to-pigmented bud animation.
