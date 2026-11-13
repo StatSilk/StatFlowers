@@ -9,6 +9,7 @@ Notable changes to StatFlowers are documented here. This project is experimental
 - Rose growth-stage descriptions alongside the bud-to-bloom timeline.
 
 ### Changed
+- Reworked the default gerbera toward a single-like, two-tier bloom with fewer, wider ray florets and natural variations in length, curvature and droop, informed by gerbera floral classifications.
 - Reduced the initial rose green-bud proportions while enlarging the rounded, open outer petal layers.
 - Rebuilt tulip tepals as two nested, curved whorls rather than intersecting tangent planes, retaining the green-to-pigmented bud animation.
 - Improved distinction between overlapping rose petal layers.
