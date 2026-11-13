@@ -13,7 +13,7 @@ const presets={
  lily:{petals:6,layers:1,open:80,width:46,curl:55,ruffle:10,twist:18,thickness:15,stem:74,size:105,angle:120,dome:15,ray:55,color:'#fff3d1',kind:'whorl',note:'Lilies have 6 showy tepals arranged in two sets of three, often with recurved tips and prominent stamens.'},
  sunflower:{petals:32,layers:1,open:88,width:55,curl:13,ruffle:8,twist:5,thickness:27,stem:79,size:110,angle:golden,dome:53,ray:30,color:'#f7bd38',kind:'disc',note:'Hundreds of small flowers (florets) form the sunflower head. The golden divergence angle packs florets into opposing Fibonacci spiral families.'},
  daisy:{petals:26,layers:1,open:92,width:45,curl:17,ruffle:7,twist:3,thickness:23,stem:70,size:98,angle:golden,dome:33,ray:50,color:'#f4f0ed',kind:'disc',note:'A daisy head is a cluster of small flowers. Spiral phyllotaxis occurs in its central disc, while the outer rays create a different, more radial pattern.'},
- gerbera:{petals:42,layers:2,open:88,width:38,curl:14,ruffle:6,twist:4,thickness:22,stem:74,size:110,angle:golden,dome:28,ray:35,color:'#ef668a',kind:'disc',note:'Gerbera flower heads demonstrate spiral phyllotaxis and large rings of ray florets. Study their centres from directly above.'},
+ gerbera:{petals:27,layers:2,open:90,width:75,curl:24,ruffle:8,twist:5,thickness:25,stem:74,size:110,angle:golden,dome:27,ray:45,color:'#f26539',kind:'disc',note:'Gerberas are composite flower heads, with a central disc and showy ray florets. This single-like form uses two overlapping tiers of broad rays with gentle variation in their downward bend. Semi-double and double cultivars can have additional inner rows. Golden-angle spirals apply to the packed disc florets, not the ray count.'},
  echinacea:{petals:18,layers:1,open:85,width:57,curl:22,ruffle:4,twist:6,thickness:20,stem:83,size:102,angle:golden,dome:92,ray:85,color:'#db83ab',kind:'disc',note:'Coneflowers have a noticeably domed central disc, making the 3D arrangement of florets especially visible from the side and top.'},
  poppy:{petals:4,layers:1,open:89,width:100,curl:33,ruffle:25,twist:13,thickness:15,stem:71,size:102,angle:90,dome:12,ray:22,color:'#e95742',kind:'whorl',note:'Many poppies show four broad petals in two overlapping pairs: fourfold symmetry, rather than the sunflower\'s dense seed spiral.'}
 };
@@ -242,10 +242,14 @@ function discFlower(group,p,headY,type){
  inst.instanceMatrix.needsUpdate=true;inst.instanceColor.needsUpdate=true;group.add(inst);
  for(let k=0;k<p.layers;k++)for(let i=0;i<n;i++){
   const phi=TAU*i/n + k*Math.PI/n;
-  const cone=type==='echinacea';
+  const cone=type==='echinacea',gerbera=type==='gerbera';
+  // Two staggered, broader ray tiers in single-like gerberas. Small deterministic
+  // differences keep the petals from forming an unnaturally flat uniform ring.
+  const variance=gerbera?(.94+.085*Math.sin(i*2.17+k*1.41)+.04*Math.cos(i*.79+2*k)):1;
+  const tierLength=gerbera?(k===0?1.10:.88):1;
   // Coneflower rays are proportionally LONGER and characteristically hang down
   // from the rim of a raised cone. Other composites have fuller, rounded ray tips.
-  const length=(cone?1.42:type==='sunflower'?1.09:1.03)*(p.size/100)*(.31+.69*age);
+  const length=(cone?1.42:type==='sunflower'?1.09:gerbera?1.24:1.03)*(p.size/100)*(.31+.69*age)*tierLength*variance;
   const fn=(t,u)=>{
    const smoothstep=x=>{x=clamp(x,0,1);return x*x*(3-2*x)};
    // A rounded elliptical tip for coneflower rays: width smoothly closes to
@@ -253,14 +257,14 @@ function discFlower(group,p,headY,type){
    const tipStart=cone?.78:type==='sunflower'?.78:.88;
    const roundedTip=t>tipStart ? Math.sqrt(Math.max(0,1-Math.pow((t-tipStart)/(1-tipStart),2))) : 1;
    const env=(.18+.82*smoothstep(t/.40))*roundedTip;
-   const w=(cone?.182:.15)*(p.width/55)*(36/n)**.54*env*u;
+   const w=(cone?.182:gerbera?.215:.15)*(p.width/(gerbera?72:55))*(36/n)**.54*env*u*(gerbera?(k===0?1:.93):1);
    const reach=.15+.85*spread;
    const rr=radius*.88+length*t*reach;
    const th=phi+w/(Math.max(.2,rr))*.78+(p.twist/100)*.04*t*t;
-   const upright=length*t*(1-spread)*.78;
-   const droop=cone ? (.15+(.28+.70*p.ray/100)*spread)*(t*t*(1.08-.08*t)) : (p.ray/100-.5)*.24*t*t*spread;
+   const upright=length*t*(1-spread)*(gerbera?.64:.78);
+   const droop=cone ? (.15+(.28+.70*p.ray/100)*spread)*(t*t*(1.08-.08*t)) : gerbera ? (.07+(p.ray/100)*.19+.09*Math.sin(i*2.51+k*1.9)+.06*(k===0?1:-1))*spread*t*t : (p.ray/100-.5)*.24*t*t*spread;
    const tipCurl=(p.curl/100)*(cone?.04:.10)*t*t*t*spread;
-   const ridge=.085*(1-u*u)*Math.sin(Math.PI*t)+.024*Math.sin(Math.PI*t);
+   const ridge=(gerbera?.075:.085)*(1-u*u)*Math.sin(Math.PI*t)+.024*Math.sin(Math.PI*t)+(gerbera?.018*Math.cos(u*7.3)*Math.sin(Math.PI*t):0);
    const edgeWave=(p.ruffle/100)*.010*Math.sin(5*u+2*t)*Math.pow(t,2);
    return [rr*Math.cos(th),headY+.075+upright+ridge+edgeWave-droop-tipCurl,rr*Math.sin(th)];
   };
