@@ -417,4 +417,16 @@ function refreshOverview(){const c=$('patternCanvas'),ctx=c.getContext('2d'),siz
 $('copySettings').onclick=()=>{const json=JSON.stringify({flower:family,settings:p},null,2);navigator.clipboard?.writeText(json).then(()=>{$('copied').textContent='Copied';setTimeout(()=>{$('copied').textContent=''},1500)}).catch(()=>prompt('Copy settings:',json))};
 // Reuse shared TAU and rad helpers declared at the top.
 setFlower(family);setMode('perspective');resize();
+// Card viewer uses the same Three.js flower engine; no duplicate geometry.
+window.addEventListener('message',event=>{
+ if(event.origin!==location.origin||!event.data||event.data.type!=='statflowers-card')return;
+ const d=event.data;
+ if(!Object.prototype.hasOwnProperty.call(presets,d.flower))return;
+ if(family!==d.flower)setFlower(d.flower);
+ if(/^#[0-9a-fA-F]{6}$/.test(d.color||''))p.color=d.color;
+ if(Number.isFinite(d.open))p.open=clamp(d.open,0,100);
+ if(Number.isFinite(d.curl))p.curl=clamp(d.curl,0,100);
+ if(Number.isFinite(d.width))p.width=clamp(d.width,20,130);
+ if(d.bloom){replayGrowth()}else{stopGrowth();renderFlower(1)}
+});
 
