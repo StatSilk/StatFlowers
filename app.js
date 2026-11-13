@@ -63,9 +63,19 @@ function petalSurface(spec){
 }
 function newPetal(parent,opts,color,thickness){let geo=meshOfSurface(petalSurface(opts),30,18,thickness),m=new THREE.Mesh(geo,material(color));m.castShadow=true;m.receiveShadow=true;parent.add(m);}
 function stemAndLeaves(group,p,headY,type){
- const len=1.2+p.stem/100*2.0,green=material('#438b52');
+ const adultLength=1.2+p.stem/100*2.0;
+ const stage=clamp(p.growth??1,0,1);
+ const rise=stage*stage*(3-2*stage);
+ const len=type==='tulip'?adultLength*(.48+.52*rise):adultLength;
+ const green=material('#438b52');
  const stem=new THREE.Mesh(new THREE.CylinderGeometry(.067,.075,len+.12,16),green);
  stem.position.y=headY-len/2+.06;stem.castShadow=true;group.add(stem);
+ if(type==='tulip'){
+   // Slim collar joins the stem to all six tepals without an artificial green sphere.
+   const collar=new THREE.Mesh(
+     new THREE.CylinderGeometry(.083,.067,.19,24,1),green);
+   collar.position.y=headY+.085;collar.castShadow=true;group.add(collar);
+ }
  if(type!=='tulip'){
  const receptacle=new THREE.Mesh(new THREE.SphereGeometry(type==='rose'?.125:.22,24,18),material('#458f4b'));
  receptacle.scale.set(1,1.10,1);receptacle.position.y=headY-.005;group.add(receptacle);
@@ -190,9 +200,11 @@ function whorl(group,p,headY,type){
        const upper=smooth((t-.40)/.60);
        const cupOpen=unfurl*(outer?1.08:.94);
        // Inner shell sits just inside the outer whorl across the whole tepal length.
-       let rr=(outer?.205:.16)+.07*t + (.16+.055*Math.sin(j*2.24+k))*Math.sin(Math.PI*t*.91)*body + (.07+.25*cupOpen)*upper;
+       let rr=(outer?.094:.087)+.08*t
+         +(.16+.045*Math.sin(j*2.24+k))*Math.sin(Math.PI*t*.91)*body
+         +(.07+.25*cupOpen)*upper;
        rr += .045*(1-u*u)*Math.sin(Math.PI*t); // round transverse cross-section
-       let y=headY+.045+height*t*(1+.027*Math.sin(j*1.77+k*2.1))+.035*Math.sin(Math.PI*t*.85);
+       let y=headY+.13+height*t*(1+.027*Math.sin(j*1.77+k*2.1))+.035*Math.sin(Math.PI*t*.85);
        y-=.095*cupOpen*upper+.045*u*u*Math.pow(t,4);
        y+=.035*(1-u*u)*Math.sin(Math.PI*t);
        return [rr*Math.cos(az),y,rr*Math.sin(az)];
@@ -208,6 +220,7 @@ function whorl(group,p,headY,type){
  }
  // Stamens emerge from the same receptacle, below the tall tulip rim.
  const sty=type==='tulip'?.60:.34;
+ if(type==='tulip'&&age<.58)return;
  for(let j=0;j<(type==='poppy'?24:6);j++){
   const a=j*TAU/(type==='poppy'?24:6);
   const fil=new THREE.Mesh(new THREE.CylinderGeometry(.009,.014,sty,6),material('#dfd19c'));
@@ -280,7 +293,8 @@ function makeFlower(type,settings){const p={...settings},group=new THREE.Group()
  const development=clamp(p.growth??1,0,1);
  if(type==='tulip'){
   const rise=development*development*(3-2*development);
-  stemGroup.scale.y=.46+.54*rise;
+  // The stem geometry itself changes length; avoid scaling from its lower
+  // origin, which previously pulled its tip away from the flower.
   group.position.y=-.40*(1-rise);
  }
  group.userData.stem=stemGroup;group.userData.bloom=bloomGroup;group.userData.stemLength=1.2+p.stem/100*2.0;
