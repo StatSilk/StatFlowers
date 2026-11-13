@@ -4,6 +4,11 @@ Notable changes to StatFlowers are documented here. This project is experimental
 
 ## [Unreleased] - 2026-11-14
 
+### Next patch (after v0.1.0)
+- Tulip now begins as a tightly gathered green bud; the tepals elongate, develop pigment, and slowly open into a bulbous six-part cup with no detached green sphere.
+- Rose outer petals now return inward near their upper rims to support the inner layers and avoid an outward-flaring, flat dish silhouette.
+- These are visual geometry refinements; browser-level rendering review remains useful before the next release.
+
 ### Added
 - Staged rose development based on an illustrative green-bud-to-bloom sequence: enclosing sepals, sepal reflexing, compact red bud, progressively opening outer petals, and later-opening inner whorls.
 - Rose growth-stage descriptions alongside the bud-to-bloom timeline.
