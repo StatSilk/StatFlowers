@@ -9,6 +9,8 @@ Notable changes to StatFlowers are documented here. This project is experimental
 - Rose growth-stage descriptions alongside the bud-to-bloom timeline.
 
 ### Changed
+- Reduced the initial rose green-bud proportions while enlarging the rounded, open outer petal layers.
+- Rebuilt tulip tepals as two nested, curved whorls rather than intersecting tangent planes, retaining the green-to-pigmented bud animation.
 - Improved distinction between overlapping rose petal layers.
 - Maintained flower-specific controls, 3D and top-down viewing, and phyllotaxis experiments.
 
