@@ -176,21 +176,27 @@ function whorl(group,p,headY,type){
    const theta=TAU*j/per+(k%2)*Math.PI/per+.018*Math.sin(j*7+k);
    const op=(p.open/100)*smooth(age);
    if(type==='tulip'){
-     // Tulip tepals: six broad, softly rectangular tepals, upright from the cup and only moderately opening.
-     const outer=k===1,wide=(outer?.31:.29)*(p.width/80);
+     // Simplified developmental sequence: green upright bud -> elongation ->
+     // pigment develops -> three inner and three outer tepals unfurl.
+     const growth=clamp(age,0,1),paint=smooth((growth-.24)/.34);
+     const unfurl=smooth((growth-.49)/.47)*(p.open/100);
+     const outer=k===1;
+     const height=.25+.83*smooth((growth-.05)/.58);
+     const halfWidth=(outer?.37:.35)*(p.width/80)*(.38+.62*smooth((growth-.15)/.58));
+     const pigment=new THREE.Color('#619b54').lerp(new THREE.Color(p.color),paint);
      const fn=(t,u)=>{
-       const b=t*t*(3-2*t);
-       const env=(.22+.78*smooth(t/.32))*(.92-.04*smooth((t-.92)/.08));
-       const x=u*wide*env;
-       const opening=.05+.20*op+(outer?.02:0);
-       const rr=.08+(.14+.14*opening)*t+(.04+.10*opening)*b+(p.curl/100)*.018*Math.pow(t,5);
-       let y=headY+.04+(.95-.06*op)*t + .12*Math.sin(Math.PI*t*.75);
-       y-=.07*u*u*Math.pow(t,4.6);
-       y+=.040*(1-u*u)*Math.sin(Math.PI*t);
-       const a=theta+(p.twist/100)*.028*t*t;
+       const widthEnvelope=(.14+.86*smooth(t/.43))*(1-.16*smooth((t-.83)/.17));
+       const x=u*halfWidth*widthEnvelope;
+       // Bud sides stay close to the axis; tips spread into a rounded cup.
+       const upper=smooth((t-.40)/.60), opening=unfurl*(outer?1.06:.92);
+       const rr=.075+.12*t + (.10+.33*opening)*upper;
+       let y=headY+.06+height*t + .055*Math.sin(Math.PI*t);
+       y-=.08*opening*upper + .065*u*u*Math.pow(t,4);
+       y+=.06*(1-u*u)*Math.sin(Math.PI*t);
+       const a=theta+(p.twist/100)*.025*t*t;
        return [rr*Math.cos(a)-x*Math.sin(a),y,rr*Math.sin(a)+x*Math.cos(a)];
      };
-     organicPetal(group,fn,p.color,k,j+11*k,.010+p.thickness/100*.016);
+     organicPetal(group,fn,pigment.getStyle(),k,j+11*k,.009+p.thickness/100*.014);
    }else{
      const opening=type==='lily'?.48+op*.55:op;
      const length=(type==='poppy'?1.08:1.22)*(.62+.38*age);
@@ -242,8 +248,9 @@ function discFlower(group,p,headY,type){
    const smoothstep=x=>{x=clamp(x,0,1);return x*x*(3-2*x)};
    // A rounded elliptical tip for coneflower rays: width smoothly closes to
    // zero across the final 22% of the petal, instead of ending in a flat cut.
-   const roundedTip=cone && t>.78 ? Math.sqrt(Math.max(0,1-Math.pow((t-.78)/.22,2))) : 1;
-   const env=(.18+.82*smoothstep(t/.40))*(cone ? roundedTip : (.96-.08*smoothstep((t-.90)/.10)));
+   const tipStart=cone?.78:type==='sunflower'?.78:.88;
+   const roundedTip=t>tipStart ? Math.sqrt(Math.max(0,1-Math.pow((t-tipStart)/(1-tipStart),2))) : 1;
+   const env=(.18+.82*smoothstep(t/.40))*roundedTip;
    const w=(cone?.182:.15)*(p.width/55)*(36/n)**.54*env*u;
    const reach=.15+.85*spread;
    const rr=radius*.88+length*t*reach;
@@ -304,7 +311,7 @@ function renderFlower(stage=1){disposeFlower();flower=makeFlower(family,{...p,gr
  $('angleHelp').textContent='The angle changes the arrangement of small florets in the flower head. 137.508° is the golden angle. Flowers with just a few petals use whorl symmetry instead.';
  $('symmetry').textContent=p.kind==='disc'?'Vogel spiral, many florets':`${p.petals}-part outer symmetry`;
  if($('growthStage')){$('growthStage').value=Math.round(stage*100);$('growthValue').textContent=Math.round(stage*100)+'%';}
- const roseStage=$('roseStageLabel');if(roseStage){roseStage.hidden=family!=='rose';if(family==='rose')roseStage.textContent=stage<.12?'1 · Closed green bud':stage<.30?'2 · Green sepals peel back':stage<.48?'3 · Red bud emerges':stage<.70?'4 · Outer petals unfurl':stage<.90?'5 · Inner layers revealed':'6 · Layered open rose';}
+ const roseStage=$('roseStageLabel');if(roseStage){roseStage.hidden=!['rose','tulip'].includes(family);if(family==='rose')roseStage.textContent=stage<.12?'1 · Closed green bud':stage<.30?'2 · Green sepals peel back':stage<.48?'3 · Red bud emerges':stage<.70?'4 · Outer petals unfurl':stage<.90?'5 · Inner layers revealed':'6 · Layered open rose';else if(family==='tulip')roseStage.textContent=stage<.24?'1 · Green bud growing':stage<.49?'2 · Petal colour emerging':stage<.76?'3 · Tulip tepals opening':'4 · Open tulip cup';}
  refreshOverview();render();}
 function replayGrowth(){cancelAnimationFrame(animationId);const token=++animationToken;const start=performance.now(),duration=3000;let last=-1000;
  function frame(now){if(token!==animationToken)return;const stage=Math.min(1,(now-start)/duration);if(now-last>65||stage===1){renderFlower(stage);last=now;}if(stage<1)animationId=requestAnimationFrame(frame)}animationId=requestAnimationFrame(frame)}
