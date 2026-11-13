@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>3D Flower Cards | StatFlowers</title><meta name="description" content="Create and share an interactive 3D flower greeting card.">
+<style>
+:root{font-family:Inter,system-ui,sans-serif;color:#f6eee9;background:#1b2421}*{box-sizing:border-box}body{margin:0}
+header{padding:14px clamp(15px,4vw,45px);display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid #45554c}a{color:#bde7c9}header a{text-decoration:none}header strong{font-size:18px}
+main{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(290px,.8fr);min-height:calc(100dvh - 62px)}
+.preview{position:relative;min-height:660px;background:radial-gradient(ellipse at center,#3c5b48,#192821 75%);overflow:hidden}
+.preview iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.message{position:absolute;left:5%;right:5%;bottom:6%;text-align:center;pointer-events:none;text-shadow:0 2px 13px #06130e,0 0 18px #06130e}
+.message h1{font-family:Georgia,serif;font-size:clamp(28px,4.1vw,57px);font-weight:400;margin:0 0 10px;line-height:1.1;overflow-wrap:anywhere}
+.message p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(15px,1.65vw,22px);line-height:1.45;margin:0}
+.message small{display:block;margin-top:14px;letter-spacing:.06em;font-size:14px}
+.editor{padding:24px;overflow-y:auto;background:#202f29}.editor h2{font-size:21px;margin:0 0 8px}.editor p{color:#b8cbbd;font-size:13px;line-height:1.5}
+label{display:block;font-size:13px;margin:15px 0 6px}input,select,textarea{width:100%;background:#12221c;border:1px solid #577464;border-radius:9px;padding:11px;color:#f9f5ee;font:inherit;font-size:14px}textarea{resize:vertical;min-height:90px}
+input[type=color]{height:44px;padding:4px}input[type=range]{padding:0;accent-color:#b7dfbd}
+button{font:inherit;cursor:pointer;border-radius:9px;padding:11px 14px;background:#426d53;color:white;border:1px solid #75a987}button:hover{background:#508461}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}.actions button{flex:1 1 125px}
+.hint{font-size:12px;color:#bbd2c3;margin-top:14px}#status{min-height:18px}
+.recipient .editor{display:none}.recipient main{display:block}.recipient .preview{height:calc(100dvh - 62px);min-height:550px}.recipient .message{bottom:8%}
+@media(max-width:800px){main{display:block}.preview{height:65dvh;min-height:420px}.editor{padding:20px}.recipient .preview{height:calc(100dvh - 62px)}}
+</style></head><body>
+<header><strong>✿ StatFlowers <span style="color:#a9d7b2">Cards</span></strong><a href="./">Explore the flower studio</a></header>
+<main><section class="preview" aria-label="Interactive 3D greeting card">
+<iframe id="flowerView" title="Interactive 3D flower: drag to rotate and scroll to zoom" src="./index.html"></iframe>
+<div class="message"><h1 id="titlePreview"></h1><p id="messagePreview"></p><small id="fromPreview"></small></div>
+</section><aside class="editor"><h2>Create your flower card</h2><p>Choose a flower, personalize your message, then share a link. The recipient can rotate the flower and watch it bloom.</p>
+<label for="occasion">Occasion</label><select id="occasion"><option>Happy Anniversary</option><option>Happy Birthday</option><option>Thank You</option><option>Congratulations</option><option>Thinking of You</option><option>Just Because</option><option value="custom">Custom greeting</option></select>
+<label for="heading">Card heading</label><input id="heading" maxlength="90" value="Happy Anniversary!">
+<label for="flower">Flower</label><select id="flower"><option value="rose">Rose</option><option value="tulip">Tulip</option><option value="lily">Lily</option><option value="sunflower">Sunflower</option><option value="daisy">Daisy</option><option value="gerbera">Gerbera</option><option value="echinacea">Coneflower</option><option value="poppy">Poppy</option></select>
+<label for="color">Flower color</label><input id="color" type="color" value="#c92839">
+<label for="open">Bloom openness</label><input id="open" type="range" min="0" max="100" value="64">
+<label for="message">Your message</label><textarea id="message" maxlength="500">Every day with you is another reason to celebrate. ❤️</textarea>
+<label for="from">From</label><input id="from" maxlength="90" placeholder="Your name">
+<div class="actions"><button id="bloom" type="button">▶ Watch bloom</button><button id="share" type="button">Copy share link</button><button id="preview" type="button">Recipient preview</button></div>
+<p class="hint" id="status" aria-live="polite"></p><p class="hint">Your message is encoded in the link. No account or server storage is required. Anyone with the link can read it. Avoid sensitive information.</p>
+</aside></main>
+<script>
+const $=id=>document.getElementById(id);
+const colors={rose:'#c92839',tulip:'#eb4b67',lily:'#fff3d1',sunflower:'#f7bd38',daisy:'#f4f0ed',gerbera:'#f26539',echinacea:'#db83ab',poppy:'#e95742'};
+const keys=['occasion','heading','flower','color','open','message','from'];
+const params=new URLSearchParams(location.hash.slice(1));
+let recipient=params.get('view')==='1',ready=false;
+for(const key of keys){if(params.has(key)){const value=params.get(key).slice(0,key==='message'?500:90);if(key==='flower'&&!Object.hasOwn(colors,value))continue;if(key==='color'&&!/^#[0-9a-fA-F]{6}$/.test(value))continue;$(key).value=value;}}
+if(recipient)document.body.classList.add('recipient');
+function updateText(){$('titlePreview').textContent=$('heading').value;$('messagePreview').textContent=$('message').value;$('fromPreview').textContent=$('from').value?'With love, '+$('from').value:'';}
+function updateFlower(bloom=false){if(!ready)return;$('flowerView').contentWindow.postMessage({type:'statflowers-card',flower:$('flower').value,color:$('color').value,open:Number($('open').value),bloom},location.origin)}
+function encode(view=true){const p=new URLSearchParams();for(const key of keys)p.set(key,$(key).value);if(view)p.set('view','1');return location.origin+location.pathname+'#'+p.toString()}
+$('flowerView').addEventListener('load',()=>{try{const doc=$('flowerView').contentDocument;const style=doc.createElement('style');style.textContent='header,.panel,.overlay,.viewbuttons,.zoomControls,.growthBar,.roseStageLabel,.inset,.under{display:none!important}main{display:block!important;height:100vh!important;min-height:0!important}.viewer{height:100vh!important;min-height:0!important;width:100%!important}';doc.head.append(style);ready=true;updateFlower(recipient)}catch(e){$('status').textContent='Flower preview could not be initialized.'}});
+for(const key of keys){$(key).addEventListener('input',()=>{updateText();updateFlower()})}
+$('occasion').addEventListener('change',()=>{if($('occasion').value!=='custom')$('heading').value=$('occasion').value+'!';updateText()});
+$('flower').addEventListener('change',()=>{$('color').value=colors[$('flower').value];updateFlower()});
+$('bloom').onclick=()=>updateFlower(true);
+$('share').onclick=async()=>{const url=encode();try{await navigator.clipboard.writeText(url);$('status').textContent='Share link copied!'}catch(e){prompt('Copy this link:',url)}};
+$('preview').onclick=()=>{location.href=encode(true);location.reload()};
+updateText();
+</script></body></html>
