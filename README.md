@@ -6,7 +6,13 @@ StatFlowers is an experimental 3D botanical studio for exploring flower shapes, 
 
 [**Explore StatFlowers live**](https://statsilk.github.io/StatFlowers/) (GitHub Pages). The app uses a Three.js CDN and needs internet access.
 
-The site runs directly in your browser and loads Three.js from a CDN.
+The site runs directly in your browser. `index.html` is the interface, `app.js` contains the flower geometry and controls, and Three.js is loaded from a CDN. An internet connection is required.
+
+## Source layout
+
+- `index.html`: interface and styling
+- `app.js`: procedural flower meshes, growth stages, 3D renderer and interactions
+- `CHANGELOG.md`: development history and model limitations
 
 ## Features
 
