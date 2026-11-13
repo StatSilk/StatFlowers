@@ -9,7 +9,7 @@ const TAU=Math.PI*2, clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),rad=d=>d*Math.PI/1
 const golden=137.507764;
 const presets={
  rose:{petals:6,layers:8,open:64,width:92,curl:22,ruffle:12,twist:7,thickness:18,stem:68,size:105,angle:golden,dome:45,ray:40,color:'#c92839',roseStyle:'natural',kind:'whorl',note:'Rose growth here is staged after a real bud-to-bloom sequence: green sepals enclose the early bud, then peel back as outer red petals open first and inner petals unfurl later. It remains an experimental approximation rather than a precise developmental model.'},
- tulip:{petals:6,layers:1,open:33,width:80,curl:14,ruffle:0,twist:3,thickness:20,stem:78,size:95,angle:120,dome:22,ray:40,color:'#eb4b67',kind:'whorl',note:'Tulips usually have 6 tepals in two whorls of three. Their threefold arrangement differs from the golden-angle packing of a sunflower head.'},
+ tulip:{petals:6,layers:1,open:33,width:80,curl:14,ruffle:0,twist:3,thickness:20,stem:78,size:95,angle:120,dome:22,ray:40,color:'#eb4b67',kind:'whorl',note:'Tulips form a cup from six gently curved tepals in two offset whorls of three. The illustrative animation shows a green bud elongating, developing pigment, and opening at its tips.'},
  lily:{petals:6,layers:1,open:80,width:46,curl:55,ruffle:10,twist:18,thickness:15,stem:74,size:105,angle:120,dome:15,ray:55,color:'#fff3d1',kind:'whorl',note:'Lilies have 6 showy tepals arranged in two sets of three, often with recurved tips and prominent stamens.'},
  sunflower:{petals:32,layers:1,open:88,width:55,curl:13,ruffle:8,twist:5,thickness:27,stem:79,size:110,angle:golden,dome:53,ray:30,color:'#f7bd38',kind:'disc',note:'Hundreds of small flowers (florets) form the sunflower head. The golden divergence angle packs florets into opposing Fibonacci spiral families.'},
  daisy:{petals:26,layers:1,open:92,width:45,curl:17,ruffle:7,twist:3,thickness:23,stem:70,size:98,angle:golden,dome:33,ray:50,color:'#f4f0ed',kind:'disc',note:'A daisy head is a cluster of small flowers. Spiral phyllotaxis occurs in its central disc, while the outer rays create a different, more radial pattern.'},
@@ -109,63 +109,64 @@ function rose(group,p,headY){
  const phase=(start,end)=>smooth((age-start)/(end-start));
  const layers=Math.max(4,Math.round(p.layers));
  const style=p.roseStyle||'natural';
- const isCup=style==='cup', isRosette=style==='rosette', isSpiral=style==='spiral';
- const matureOpen=p.open/100, countBase=Math.max(5,Math.min(11,p.petals));
+ const isCup=style==='cup',isRosette=style==='rosette',isSpiral=style==='spiral';
+ const matureOpen=p.open/100,countBase=Math.max(5,Math.min(11,p.petals));
+ // The green juvenile bud stays compact; sepals enlarge only slightly as they reflex.
+ const juvenile=phase(.08,.34),sepalSpread=phase(.15,.39);
+ const greenScale=.66+.17*juvenile;
  const hyp=new THREE.Mesh(new THREE.SphereGeometry(1,28,20),material('#53904c'));
- hyp.scale.set(.20,.24,.20);hyp.position.y=headY+.07;hyp.castShadow=true;group.add(hyp);
- const sepalSpread=phase(.12,.38);
+ hyp.scale.set(.14,.17,.14);hyp.position.y=headY+.055;hyp.castShadow=true;group.add(hyp);
  for(let k=0;k<5;k++){
-   const phi=k*TAU/5+.12;
-   const fn=(t,u)=>{
-     const e=Math.sin(Math.PI*Math.pow(t,.72));
-     const w=(.028+.205*Math.pow(Math.max(0,e),.78))*u;
-     const baseR=.14;
-     const closedR=baseR+.17*Math.sin(Math.PI*t*.78)-.12*Math.pow(t,4);
-     const reflexR=baseR+.15*t+.40*Math.pow(t,1.7);
-     const rr=closedR*(1-sepalSpread)+reflexR*sepalSpread;
-     const closedY=headY+.12+.76*t-.10*t*t;
-     const reflexY=headY+.12+.40*t-.51*Math.pow(t,2);
-     const y=closedY*(1-sepalSpread)+reflexY*sepalSpread+.025*(1-u*u)*Math.sin(Math.PI*t);
-     const a=phi+(.035*u)*t;
-     return [rr*Math.cos(a)-w*Math.sin(a),y,rr*Math.sin(a)+w*Math.cos(a)];
-   };
-   const sep=new THREE.Mesh(meshOfSurface(fn,28,18,.015),material(k%2?'#649f57':'#75ad60'));
-   sep.castShadow=true;sep.receiveShadow=true;group.add(sep);
+  const phi=k*TAU/5+.12;
+  const fn=(t,u)=>{
+   const e=Math.sin(Math.PI*Math.pow(t,.72));
+   const w=greenScale*(.02+.155*Math.pow(Math.max(0,e),.78))*u;
+   const closedR=greenScale*(.10+.145*Math.sin(Math.PI*t*.78)-.09*Math.pow(t,4));
+   const reflexR=.11+.12*t+.27*Math.pow(t,1.7);
+   const rr=closedR*(1-sepalSpread)+reflexR*sepalSpread;
+   const closedY=headY+.09+greenScale*(.62*t-.08*t*t);
+   const reflexY=headY+.09+.32*t-.40*Math.pow(t,2);
+   const y=closedY*(1-sepalSpread)+reflexY*sepalSpread+.016*(1-u*u)*Math.sin(Math.PI*t);
+   const a=phi+.03*u*t;
+   return [rr*Math.cos(a)-w*Math.sin(a),y,rr*Math.sin(a)+w*Math.cos(a)];
+  };
+  const sep=new THREE.Mesh(meshOfSurface(fn,28,18,.012),material(k%2?'#649f57':'#75ad60'));
+  sep.castShadow=true;sep.receiveShadow=true;group.add(sep);
  }
- const redBudReveal=phase(.16,.31);
+ const redReveal=phase(.18,.34);
  const core=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),material(p.color));
- core.scale.set(.12+.04*age,.23+.045*age,.12+.04*age);
- core.position.y=headY+.38;core.visible=redBudReveal>.02;group.add(core);
+ core.scale.set(.08+.065*redReveal,.13+.085*redReveal,.08+.065*redReveal);
+ core.position.y=headY+.26;core.visible=redReveal>.02;group.add(core);
+ // At maturity the broad exterior petals build a rounded bowl rather than a narrow stack.
  for(let layer=0;layer<layers;layer++){
-   const q=layer/(layers-1),outerTime=1-q;
-   const emergence=phase(.17+.12*outerTime,.34+.15*outerTime);
-   const opening=phase(.34+.24*outerTime,.74+.22*outerTime)*matureOpen;
-   const petals=Math.max(4,Math.round(countBase*(.72+.23*q)));
-   const rootR=.075+.070*q,baseY=headY+.12+.025*q;
-   const adultHeight=(.73-.20*q)*(isCup?1.17:isRosette?.83:1);
-   const height=adultHeight*(.32+.68*emergence);
-   const width=(.14+.155*q)*(p.width/92)*(7/petals)**.22*(.27+.73*emergence)*(isRosette?1.10:1);
-   const flareScale=isCup?.72:isRosette?1.35:1;
-   const finalReach=(.20+.62*q)*opening*flareScale;
-   for(let j=0;j<petals;j++){
-     const seed=layer*29+j,phi=j*TAU/petals+layer*(isSpiral?2.40:2.12)+.04*Math.sin(seed*1.47);
-     const fn=(t,u)=>{
-       const tt=smooth(t),top=smooth((t-.43)/.57);
-       const widthEnv=(.12+.88*smooth(t/.42))*(1-.13*smooth((t-.92)/.08));
-       const w=width*u*widthEnv;
-       const closedR=rootR+.07*t;
-       let rr=closedR+finalReach*(.13*tt+.87*top);
-       rr+=.035*(p.curl/100)*opening*Math.pow(t,4);
-       let y=baseY+height*(t-.10*q*t*t);
-       y-=opening*(.04+.24*q)*Math.pow(t,3.25);
-       y+=.070*(1-u*u)*Math.sin(Math.PI*t);
-       y-=.044*u*u*Math.pow(t,4)*opening;
-       y+=(p.ruffle/100)*.020*Math.pow(t,3)*Math.pow(Math.abs(u),3)*Math.sin(6*u+seed*.77);
-       const az=phi+(1-q)*(.20*(1-t))+(p.twist/100)*.045*t*t;
-       return [rr*Math.cos(az)-w*Math.sin(az),y,rr*Math.sin(az)+w*Math.cos(az)];
-     };
-     if(emergence>.005)organicPetal(group,fn,p.color,layer,seed,.008+p.thickness/100*.016);
-   }
+  const q=layer/(layers-1),innerDelay=1-q;
+  const emergence=phase(.19+.10*innerDelay,.37+.13*innerDelay);
+  const opening=phase(.35+.23*innerDelay,.77+.19*innerDelay)*matureOpen;
+  const petals=Math.max(4,Math.round(countBase*(.70+.22*q)));
+  const rootR=.065+.075*q,baseY=headY+.08+.028*q;
+  const adultHeight=(.68-.15*q)*(isCup?1.12:isRosette?.83:1);
+  const height=adultHeight*(.30+.70*emergence);
+  const styleFlare=isCup?.82:isRosette?1.22:1;
+  const width=(.17+.24*q)*(p.width/92)*(7/petals)**.19*(.26+.74*emergence)*(isRosette?1.09:1);
+  const finalReach=(.24+.95*Math.pow(q,1.18))*opening*styleFlare;
+  for(let j=0;j<petals;j++){
+   const seed=layer*29+j,phi=j*TAU/petals+layer*(isSpiral?2.40:2.12)+.045*Math.sin(seed*1.47);
+   const fn=(t,u)=>{
+    const tt=smooth(t),upper=smooth((t-.40)/.60);
+    const widthEnv=(.12+.88*smooth(t/.40))*(1-.17*smooth((t-.94)/.06));
+    const w=width*u*widthEnv;
+    const closedR=rootR+.05*t;
+    const rr=closedR+finalReach*(.15*tt+.85*upper)+.025*(p.curl/100)*opening*Math.pow(t,4);
+    let y=baseY+height*(t-.13*q*t*t);
+    y-=opening*(.035+.23*q)*Math.pow(t,3.1);
+    y+=.07*(1-u*u)*Math.sin(Math.PI*t);
+    y-=.05*u*u*Math.pow(t,4)*opening;
+    y+=(p.ruffle/100)*.018*Math.pow(t,3)*Math.pow(Math.abs(u),3)*Math.sin(6*u+seed*.77);
+    const az=phi+(1-q)*(.20*(1-t))+(p.twist/100)*.045*t*t;
+    return [rr*Math.cos(az)-w*Math.sin(az),y,rr*Math.sin(az)+w*Math.cos(az)];
+   };
+   if(emergence>.005)organicPetal(group,fn,p.color,layer,seed,.008+p.thickness/100*.016);
+  }
  }
 }
 function whorl(group,p,headY,type){
@@ -176,27 +177,28 @@ function whorl(group,p,headY,type){
    const theta=TAU*j/per+(k%2)*Math.PI/per+.018*Math.sin(j*7+k);
    const op=(p.open/100)*smooth(age);
    if(type==='tulip'){
-     // Simplified developmental sequence: green upright bud -> elongation ->
-     // pigment develops -> three inner and three outer tepals unfurl.
+     // Each tepal is a curved sector of the same cup, not a flat tangent panel.
+     // Two offset whorls of three, each with a separate radial shell, prevent mesh crossings.
      const growth=clamp(age,0,1),paint=smooth((growth-.24)/.34);
-     const unfurl=smooth((growth-.49)/.47)*(p.open/100);
-     const outer=k===1;
-     const height=.25+.83*smooth((growth-.05)/.58);
-     const halfWidth=(outer?.37:.35)*(p.width/80)*(.38+.62*smooth((growth-.15)/.58));
-     const pigment=new THREE.Color('#619b54').lerp(new THREE.Color(p.color),paint);
+     const unfurl=smooth((growth-.48)/.48)*(p.open/100);
+     const outer=k===1,body=smooth((growth-.07)/.62);
+     const height=.22+.80*body;
+     const pigment=new THREE.Color('#639a59').lerp(new THREE.Color(p.color),paint);
+     const halfArc=(outer?.85:.87)*(p.width/80)*(.55+.45*body);
      const fn=(t,u)=>{
-       const widthEnvelope=(.14+.86*smooth(t/.43))*(1-.16*smooth((t-.83)/.17));
-       const x=u*halfWidth*widthEnvelope;
-       // Bud sides stay close to the axis; tips spread into a rounded cup.
-       const upper=smooth((t-.40)/.60), opening=unfurl*(outer?1.06:.92);
-       const rr=.075+.12*t + (.10+.33*opening)*upper;
-       let y=headY+.06+height*t + .055*Math.sin(Math.PI*t);
-       y-=.08*opening*upper + .065*u*u*Math.pow(t,4);
-       y+=.06*(1-u*u)*Math.sin(Math.PI*t);
-       const a=theta+(p.twist/100)*.025*t*t;
-       return [rr*Math.cos(a)-x*Math.sin(a),y,rr*Math.sin(a)+x*Math.cos(a)];
+       const env=(.13+.87*smooth(t/.41))*(1-.15*smooth((t-.88)/.12));
+       const az=theta+u*halfArc*env+(p.twist/100)*.014*t*t;
+       const upper=smooth((t-.40)/.60);
+       const cupOpen=unfurl*(outer?1.08:.94);
+       // Inner shell sits just inside the outer whorl across the whole tepal length.
+       let rr=(outer?.20:.145)+.06*t + (.06+.24*cupOpen)*upper;
+       rr += .022*u*u*Math.sin(Math.PI*t); // round transverse cross-section
+       let y=headY+.045+height*t+.055*Math.sin(Math.PI*t*.85);
+       y-=.095*cupOpen*upper+.045*u*u*Math.pow(t,4);
+       y+=.035*(1-u*u)*Math.sin(Math.PI*t);
+       return [rr*Math.cos(az),y,rr*Math.sin(az)];
      };
-     organicPetal(group,fn,pigment.getStyle(),k,j+11*k,.009+p.thickness/100*.014);
+     organicPetal(group,fn,pigment.getStyle(),k,j+11*k,.007+p.thickness/100*.010);
    }else{
      const opening=type==='lily'?.48+op*.55:op;
      const length=(type==='poppy'?1.08:1.22)*(.62+.38*age);
