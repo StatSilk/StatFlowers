@@ -145,40 +145,39 @@ function rose(group,p,headY){
  const core=new THREE.Mesh(new THREE.SphereGeometry(1,32,24),material(p.color));
  core.scale.set(.08+.065*redReveal,.13+.085*redReveal,.08+.065*redReveal);
  core.position.y=headY+.26;core.visible=redReveal>.02;group.add(core);
- // At maturity the broad exterior petals build a rounded bowl rather than a narrow stack.
+ // Petals are bounded angular sectors on nested radial shells, rather
+ // than tangent planes that cross one another. Outer whorls cradle the centre.
  for(let layer=0;layer<layers;layer++){
   const q=layer/(layers-1),innerDelay=1-q;
   const emergence=phase(.19+.10*innerDelay,.37+.13*innerDelay);
   const opening=phase(.35+.23*innerDelay,.77+.19*innerDelay)*matureOpen;
   const petals=Math.max(4,Math.round(countBase*(.70+.22*q)));
-  const rootR=.065+.075*q,baseY=headY+.08+.028*q;
-  const adultHeight=(.97-.17*q)*(isCup?1.10:isRosette?.92:1);
-  const height=adultHeight*(.30+.70*emergence);
-  const styleFlare=isCup?.82:isRosette?1.22:1;
-  const width=(.18+.19*q)*(p.width/92)*(7/petals)**.19*(.26+.74*emergence)*(isRosette?1.09:1);
-  const finalReach=(.15+.64*Math.pow(q,1.13))*opening*styleFlare;
+  const sector=TAU/petals;
+  const styleFlare=isCup?.83:isRosette?1.08:1;
+  const height=(1.06-.28*q)*(isCup?1.11:isRosette?.91:1)*(.30+.70*emergence);
+  const halfArc=sector*Math.min(.485,.43*(p.width/92));
   for(let j=0;j<petals;j++){
-   const seed=layer*29+j,phi=j*TAU/petals+layer*(isSpiral?2.40:2.12)+.045*Math.sin(seed*1.47);
+   const seed=layer*29+j,phi=j*sector+layer*(isSpiral?2.40:2.12)+.012*Math.sin(seed*1.47);
+   const variation=1+.024*Math.sin(seed*1.53);
    const fn=(t,u)=>{
-    const tt=smooth(t),upper=smooth((t-.40)/.60);
-    const widthEnv=(.12+.88*smooth(t/.40))*(1-.17*smooth((t-.94)/.06));
-    const variation=1+.055*Math.sin(seed*2.17)+.026*Math.cos(seed*.73);
-    const w=width*variation*u*widthEnv;
-    const closedR=rootR+.05*t;
-    // Exterior petals form a retaining cup: they swell at mid-height and
-    // curl back inward toward the rim, rather than flaring out as a shelf.
-    const shell=finalReach*variation*(.48*tt+.52*upper);
-    const rimReturn=opening*(.15+.15*q)*smooth((t-.64)/.36)*(isRosette?.60:1);
-    const rr=closedR+shell-rimReturn+.010*(p.curl/100)*opening*Math.pow(t,4);
-    let y=baseY+height*(t-.12*q*t*t)*(1+.034*Math.sin(seed*1.37));
-    y-=opening*(.024+.10*q)*Math.pow(t,3.1);
-    y+=.07*(1-u*u)*Math.sin(Math.PI*t);
-    y-=.05*u*u*Math.pow(t,4)*opening;
-    y+=(p.ruffle/100)*.018*Math.pow(t,3)*Math.pow(Math.abs(u),3)*Math.sin(6*u+seed*.77);
-    const az=phi+(1-q)*(.20*(1-t))+(p.twist/100)*.045*t*t;
-    return [rr*Math.cos(az)-w*Math.sin(az),y,rr*Math.sin(az)+w*Math.cos(az)];
+    const rise=smooth(t/.66),upper=smooth((t-.70)/.30);
+    const az=phi+u*halfArc*(.06+.94*smooth(t/.36))*variation+
+      (p.twist/100)*.012*t*t*(1-u*u);
+    // Strict outward tier spacing prevents prominent self-intersections;
+    // the rim's inward fold stays smaller than the shell separation.
+    const outerRadius=q*(.20+.48*opening*styleFlare)*rise;
+    const centralBulge=.085*(1-q)*Math.sin(Math.PI*t);
+    const rimCurl=q*(.017+.025*(p.curl/100))*opening*upper;
+    const rr=.09+.065*t+outerRadius+centralBulge-rimCurl+
+      .022*(1-u*u)*Math.sin(Math.PI*t);
+    let y=headY+.11+height*(t-.07*q*t*t)*variation;
+    y+=.055*(1-u*u)*Math.sin(Math.PI*t);
+    y-=opening*(.02+.075*q)*Math.pow(t,3);
+    y-=.035*u*u*upper;
+    y+=(p.ruffle/100)*.007*Math.sin(3*u+seed*.23)*upper;
+    return [rr*Math.cos(az),y,rr*Math.sin(az)];
    };
-   if(emergence>.005)organicPetal(group,fn,p.color,layer,seed,.008+p.thickness/100*.016);
+   if(emergence>.005)organicPetal(group,fn,p.color,layer,seed,.007+p.thickness/100*.013);
   }
  }
 }
@@ -196,30 +195,31 @@ function whorl(group,p,headY,type){
      // Green closed bud first; the colour develops only as the elongated bud
      // approaches opening. Two staggered three-tepal whorls form one cup.
      const paint=smooth((growth-.34)/.34);
-     const unfurl=smooth((growth-.57)/.40)*(p.open/100);
+     const unfurl=smooth((growth-.53)/.45)*(.55+.65*p.open/100);
      const outer=k===1,body=smooth((growth-.05)/.62);
      const height=.29+.77*body;
      const pigment=new THREE.Color('#619d55').lerp(new THREE.Color(p.color),paint);
-     const halfArc=(outer?.97:.93)*(p.width/80)*(.48+.52*body);
+     const halfArc=(outer?.82:.79)*(p.width/80)*(.48+.52*body);
      const fn=(t,u)=>{
        const upper=smooth((t-.54)/.46);
        const belly=Math.pow(Math.sin(Math.PI*t),1.15);
        // The rim narrows into the centre while the bud is green and closed.
        // With maturity the upper edge slowly folds outward into a rounded lip.
        const env=(.08+.92*smooth(t/.34))*(1-.30*smooth((t-.82)/.18)*(1-unfurl));
-       const variation=1+.035*Math.sin(j*2.31+k*1.7);
-       const az=theta+u*halfArc*env*variation+(p.twist/100)*.014*t*t
-         +.018*Math.sin(j*2.63+k*1.8)*t*t;
+       const variation=1+.072*Math.sin(j*2.31+k*1.7);
+       const az=theta+u*halfArc*env*variation+(p.twist/100)*.026*t*t
+         +(.058*Math.sin(j*2.63+k*1.8)+.022*u*u*Math.sin(j+2*k))*t*t;
        const cupOpen=unfurl*(outer?1.09:.94);
        const rootR=outer?.090:.083;
        // Closed tulip: narrow base, rounded broad middle, gathered tips.
        // The nonzero middle radius produces a genuinely bulbous silhouette.
        let rr=rootR+.030*t+(.29+.035*Math.sin(j*2.24+k))*belly*(.30+.70*body);
-       rr+=.39*cupOpen*upper;
+       rr+=(.38+.085*Math.sin(j*1.96+k*2.3))*cupOpen*upper;
        rr+=.035*(1-u*u)*belly;
-       let y=headY+.13+height*t*(1+.025*Math.sin(j*1.77+k*2.1));
+       let y=headY+.13+height*t*(1+.070*Math.sin(j*1.77+k*2.1));
        y+=.055*(1-u*u)*belly;
-       y-=.12*cupOpen*upper+.018*u*u*Math.pow(t,3);
+       y-=(.16+.035*Math.cos(j*2.11+k))*cupOpen*upper+.027*u*u*Math.pow(t,3);
+       y+=.017*Math.sin(3*u+j*1.37+k)*upper;
        return [rr*Math.cos(az),y,rr*Math.sin(az)];
      };
      organicPetal(group,fn,pigment.getStyle(),k,j+11*k,.007+p.thickness/100*.010);
