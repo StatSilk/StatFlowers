@@ -165,7 +165,11 @@ function rose(group,p,headY){
     const variation=1+.055*Math.sin(seed*2.17)+.026*Math.cos(seed*.73);
     const w=width*variation*u*widthEnv;
     const closedR=rootR+.05*t;
-    const rr=closedR+finalReach*variation*(.27*tt+.73*upper)+.018*(p.curl/100)*opening*Math.pow(t,4);
+    // Exterior petals form a retaining cup: they swell at mid-height and
+    // curl back inward toward the rim, rather than flaring out as a shelf.
+    const shell=finalReach*variation*(.48*tt+.52*upper);
+    const rimReturn=opening*(.15+.15*q)*smooth((t-.64)/.36)*(isRosette?.60:1);
+    const rr=closedR+shell-rimReturn+.010*(p.curl/100)*opening*Math.pow(t,4);
     let y=baseY+height*(t-.12*q*t*t)*(1+.034*Math.sin(seed*1.37));
     y-=opening*(.024+.10*q)*Math.pow(t,3.1);
     y+=.07*(1-u*u)*Math.sin(Math.PI*t);
@@ -188,25 +192,34 @@ function whorl(group,p,headY,type){
    if(type==='tulip'){
      // Each tepal is a curved sector of the same cup, not a flat tangent panel.
      // Two offset whorls of three, each with a separate radial shell, prevent mesh crossings.
-     const growth=clamp(age,0,1),paint=smooth((growth-.24)/.34);
-     const unfurl=smooth((growth-.48)/.48)*(p.open/100);
-     const outer=k===1,body=smooth((growth-.07)/.62);
-     const height=.22+.80*body;
-     const pigment=new THREE.Color('#639a59').lerp(new THREE.Color(p.color),paint);
-     const halfArc=(outer?.93:.91)*(p.width/80)*(.55+.45*body);
+     const growth=clamp(age,0,1);
+     // Green closed bud first; the colour develops only as the elongated bud
+     // approaches opening. Two staggered three-tepal whorls form one cup.
+     const paint=smooth((growth-.34)/.34);
+     const unfurl=smooth((growth-.57)/.40)*(p.open/100);
+     const outer=k===1,body=smooth((growth-.05)/.62);
+     const height=.29+.77*body;
+     const pigment=new THREE.Color('#619d55').lerp(new THREE.Color(p.color),paint);
+     const halfArc=(outer?.97:.93)*(p.width/80)*(.48+.52*body);
      const fn=(t,u)=>{
-       const env=(.13+.87*smooth(t/.41))*(1-.15*smooth((t-.88)/.12));
-       const az=theta+u*halfArc*env+(p.twist/100)*.014*t*t+.025*Math.sin(j*2.63+k*1.8)*t*t;
-       const upper=smooth((t-.40)/.60);
-       const cupOpen=unfurl*(outer?1.08:.94);
-       // Inner shell sits just inside the outer whorl across the whole tepal length.
-       let rr=(outer?.094:.087)+.08*t
-         +(.16+.045*Math.sin(j*2.24+k))*Math.sin(Math.PI*t*.91)*body
-         +(.07+.25*cupOpen)*upper;
-       rr += .045*(1-u*u)*Math.sin(Math.PI*t); // round transverse cross-section
-       let y=headY+.13+height*t*(1+.027*Math.sin(j*1.77+k*2.1))+.035*Math.sin(Math.PI*t*.85);
-       y-=.095*cupOpen*upper+.045*u*u*Math.pow(t,4);
-       y+=.035*(1-u*u)*Math.sin(Math.PI*t);
+       const upper=smooth((t-.54)/.46);
+       const belly=Math.pow(Math.sin(Math.PI*t),1.15);
+       // The rim narrows into the centre while the bud is green and closed.
+       // With maturity the upper edge slowly folds outward into a rounded lip.
+       const env=(.08+.92*smooth(t/.34))*(1-.30*smooth((t-.82)/.18)*(1-unfurl));
+       const variation=1+.035*Math.sin(j*2.31+k*1.7);
+       const az=theta+u*halfArc*env*variation+(p.twist/100)*.014*t*t
+         +.018*Math.sin(j*2.63+k*1.8)*t*t;
+       const cupOpen=unfurl*(outer?1.09:.94);
+       const rootR=outer?.090:.083;
+       // Closed tulip: narrow base, rounded broad middle, gathered tips.
+       // The nonzero middle radius produces a genuinely bulbous silhouette.
+       let rr=rootR+.030*t+(.29+.035*Math.sin(j*2.24+k))*belly*(.30+.70*body);
+       rr+=.39*cupOpen*upper;
+       rr+=.035*(1-u*u)*belly;
+       let y=headY+.13+height*t*(1+.025*Math.sin(j*1.77+k*2.1));
+       y+=.055*(1-u*u)*belly;
+       y-=.12*cupOpen*upper+.018*u*u*Math.pow(t,3);
        return [rr*Math.cos(az),y,rr*Math.sin(az)];
      };
      organicPetal(group,fn,pigment.getStyle(),k,j+11*k,.007+p.thickness/100*.010);
@@ -220,7 +233,7 @@ function whorl(group,p,headY,type){
  }
  // Stamens emerge from the same receptacle, below the tall tulip rim.
  const sty=type==='tulip'?.60:.34;
- if(type==='tulip'&&age<.58)return;
+ if(type==='tulip'&&age<.74)return;
  for(let j=0;j<(type==='poppy'?24:6);j++){
   const a=j*TAU/(type==='poppy'?24:6);
   const fil=new THREE.Mesh(new THREE.CylinderGeometry(.009,.014,sty,6),material('#dfd19c'));
