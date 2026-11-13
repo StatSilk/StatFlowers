@@ -1,12 +1,12 @@
 # StatFlowers 🌸
 
-An interactive Three.js experiment exploring procedural 3D flowers, botanical forms, bloom animations and mathematical patterns.
+StatFlowers is an experimental 3D botanical studio for exploring flower shapes, growth animations and the mathematics of nature, from floral symmetry to Fibonacci spirals.
 
 ## Run the app
 
-Open [StatFlowers](https://statsilk.github.io/StatFlowers/) once GitHub Pages is enabled on the main branch. The app uses a Three.js CDN and needs internet access.
+[**Explore StatFlowers live**](https://statsilk.github.io/StatFlowers/) (GitHub Pages). The app uses a Three.js CDN and needs internet access.
 
-To enable Pages: **Settings → Pages → Deploy from a branch → main / (root)**.
+The site runs directly in your browser and loads Three.js from a CDN.
 
 ## Features
 
