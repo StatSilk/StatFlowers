@@ -1,3 +1,4 @@
+import {petalGrowth,flowerVariation,roseTierRadius} from './petal-math.js';
 
 
 const TAU=Math.PI*2, clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),rad=d=>d*Math.PI/180;
@@ -167,13 +168,15 @@ function rose(group,p,headY){
     // the rim's inward fold stays smaller than the shell separation.
     const outerRadius=q*(.20+.48*opening*styleFlare)*rise;
     const centralBulge=.085*(1-q)*Math.sin(Math.PI*t);
-    const rimCurl=q*(.017+.025*(p.curl/100))*opening*upper;
-    const rr=.09+.065*t+outerRadius+centralBulge-rimCurl+
+    const rimCurl=q*(.035+.10*(p.curl/100))*opening*upper;
+    const rr=roseTierRadius({tier:q,opening:opening*styleFlare,t,cupping:p.curl/100})+centralBulge-rimCurl*.18+
       .022*(1-u*u)*Math.sin(Math.PI*t);
     let y=headY+.11+height*(t-.07*q*t*t)*variation;
     y+=.055*(1-u*u)*Math.sin(Math.PI*t);
     y-=opening*(.02+.075*q)*Math.pow(t,3);
     y-=.035*u*u*upper;
+    const grow=petalGrowth({t,u,stage:emergence,seed,cupping:p.curl/100,edgeGrowth:p.ruffle/100,asymmetry:p.twist/100});
+    y+=grow.displacement*.065;
     y+=(p.ruffle/100)*.007*Math.sin(3*u+seed*.23)*upper;
     return [rr*Math.cos(az),y,rr*Math.sin(az)];
    };
@@ -199,14 +202,14 @@ function whorl(group,p,headY,type){
      const outer=k===1,body=smooth((growth-.05)/.62);
      const height=.29+.77*body;
      const pigment=new THREE.Color('#619d55').lerp(new THREE.Color(p.color),paint);
-     const halfArc=(outer?.82:.79)*(p.width/80)*(.48+.52*body);
+     const halfArc=(outer?.86:.80)*(p.width/80)*(.48+.52*body);
      const fn=(t,u)=>{
        const upper=smooth((t-.54)/.46);
        const belly=Math.pow(Math.sin(Math.PI*t),1.15);
        // The rim narrows into the centre while the bud is green and closed.
        // With maturity the upper edge slowly folds outward into a rounded lip.
        const env=(.08+.92*smooth(t/.34))*(1-.30*smooth((t-.82)/.18)*(1-unfurl));
-       const variation=1+.072*Math.sin(j*2.31+k*1.7);
+       const variation=flowerVariation(j+7*k,.075);
        const az=theta+u*halfArc*env*variation+(p.twist/100)*.026*t*t
          +(.058*Math.sin(j*2.63+k*1.8)+.022*u*u*Math.sin(j+2*k))*t*t;
        const cupOpen=unfurl*(outer?1.09:.94);
@@ -219,6 +222,8 @@ function whorl(group,p,headY,type){
        let y=headY+.13+height*t*(1+.070*Math.sin(j*1.77+k*2.1));
        y+=.055*(1-u*u)*belly;
        y-=(.16+.035*Math.cos(j*2.11+k))*cupOpen*upper+.027*u*u*Math.pow(t,3);
+       const grow=petalGrowth({t,u,stage:body,seed:j+7*k,cupping:p.curl/100,edgeGrowth:p.ruffle/100,asymmetry:p.twist/100});
+       y+=grow.displacement*.095;
        y+=.017*Math.sin(3*u+j*1.37+k)*upper;
        return [rr*Math.cos(az),y,rr*Math.sin(az)];
      };
