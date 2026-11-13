@@ -5,6 +5,8 @@ Notable changes to StatFlowers are documented here. This project is experimental
 ## [Unreleased] - 2026-11-14
 
 ### Next patch (after v0.1.0)
+- Replaced the rose's intersecting tangent-plane petal geometry with nested curved radial sectors and constrained inward rim folds.
+- Loosened the mature tulip's upper tepals, increasing individual height, lean, bend and rim variation while keeping a closed juvenile bud.
 - Tulip now begins as a tightly gathered green bud; the tepals elongate, develop pigment, and slowly open into a bulbous six-part cup with no detached green sphere.
 - Rose outer petals now return inward near their upper rims to support the inner layers and avoid an outward-flaring, flat dish silhouette.
 - These are visual geometry refinements; browser-level rendering review remains useful before the next release.
