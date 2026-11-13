@@ -351,6 +351,7 @@ let flower;let animationId=0;let animationToken=0;
 function disposeFlower(){if(!flower)return;scene.remove(flower);flower.traverse(x=>{if(x.geometry)x.geometry.dispose();if(x.material){if(Array.isArray(x.material))x.material.forEach(m=>m.dispose());else x.material.dispose();}})}
 function renderFlower(stage=1){disposeFlower();flower=makeFlower(family,{...p,growth:stage});scene.add(flower);
  $('flowerLabel').textContent=names[family];$('science').textContent=p.note;
+ const mc=$('mathContent');if(mc){const disc=p.kind==='disc';mc.textContent=disc?`Disc florets: r = R√((i+0.5)/N), θ = i×${Number(p.angle).toFixed(1)}°. Golden angle ≈ 137.508°. This is Vogel's idealized phyllotaxis, not a model of seed development.`:`Petal surfaces: t is base-to-tip, u is across the blade. Cupping ∝ (u²−0.32)sin(0.9πt); edge ripples grow ∝ t²·⁵|u|³. Flower: ${names[family]}. Current curl ${p.curl}%, ruffle ${p.ruffle}%, openness ${p.open}%. Rose tiers have inward rim curvature; tulip has two staggered whorls of three.`;}
  $('angleTitle').textContent='Floret spiral / phyllotaxis';
  $('angleHelp').textContent='The angle changes the arrangement of small florets in the flower head. 137.508° is the golden angle. Flowers with just a few petals use whorl symmetry instead.';
  $('symmetry').textContent=p.kind==='disc'?'Vogel spiral, many florets':`${p.petals}-part outer symmetry`;
