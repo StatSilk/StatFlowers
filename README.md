@@ -24,6 +24,10 @@ To enable Pages: **Settings → Pages → Deploy from a branch → main / (root)
 
 Independently implemented for StatSilk. Inspired by botanical geometry approaches such as [Floraison](https://github.com/Wally869/Floraison); this project is **not a fork** and does not include Floraison source code.
 
+## Changes and development status
+
+See [CHANGELOG.md](CHANGELOG.md) for updates, experimental limitations and release history. The rose-growth model currently follows illustrative development stages, not a validated cellular-growth simulation.
+
 ## License
 
-MIT (see [LICENSE](LICENSE)).
+Released under the permissive [MIT License](LICENSE). You may use, modify and redistribute the code, including commercially, provided the copyright and license notices are retained.
