@@ -8,6 +8,10 @@ StatFlowers is an experimental 3D botanical studio for exploring flower shapes, 
 
 The site runs directly in your browser. `index.html` is the interface, `app.js` contains the flower geometry and controls, and Three.js is loaded from a CDN. An internet connection is required.
 
+## First public preview
+
+See the [v0.1.0 release notes](RELEASE_NOTES_v0.1.0.md). This is an experimental preview; botanical realism is still being refined.
+
 ## Source layout
 
 - `index.html`: interface and styling
