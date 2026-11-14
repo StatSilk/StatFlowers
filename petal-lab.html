@@ -3,14 +3,14 @@
 <style>
 :root{font:14px system-ui,sans-serif;color:#e8f5ee;background:#0d1e1a}*{box-sizing:border-box}body{margin:0}header{padding:13px 17px;display:flex;gap:15px;align-items:center;justify-content:space-between;border-bottom:1px solid #36564b}a{color:#a4e9bd}main{display:grid;grid-template-columns:minmax(0,1fr) 315px;min-height:calc(100dvh - 53px)}#view{width:100%;height:100%;min-height:520px;touch-action:none;display:block;background:#112620}aside{padding:15px;overflow:auto;border-left:1px solid #36564b}h1{font-size:17px;margin:0}h2{font-size:15px}p,small{color:#b5cbbd;line-height:1.5}label{display:flex;justify-content:space-between;gap:8px;margin-top:14px}input[type=range],select{width:100%;margin-top:7px;accent-color:#83d5a6}select,button{color:#ecf9ef;background:#224637;border:1px solid #507965;border-radius:8px;padding:9px}button{cursor:pointer}.buttons{display:flex;gap:6px;flex-wrap:wrap}.buttons button{flex:1}.active{background:#357c56}.metric{font-variant-numeric:tabular-nums;padding:8px 0;border-bottom:1px solid #345145}#overlay{position:absolute;top:70px;left:14px;background:#11291ecf;padding:10px;border-radius:9px;pointer-events:none;max-width:280px}.stage{position:relative;min-height:520px}footer{font-size:11px;color:#a9bdb0;margin-top:15px}@media(max-width:800px){main{display:block}.stage{height:62dvh;min-height:340px}#view{min-height:340px}aside{border-left:0;border-top:1px solid #36564b}header{flex-wrap:wrap}}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js"}}</script></head>
-<body><header><h1>✿ StatFlowers · Petal geometry lab</h1><a href="./index.html">← Main studio</a></header><main><div class="stage"><canvas id="view"></canvas><div id="overlay">Drag to rotate · pinch to zoom<br>Left: baseline &nbsp; Right: curved surface</div></div><aside><h2>Experimental v0.2 prototype</h2><p>Compare an idealized flat petal against a parametric surface. The same surface equations generate rose-like and tulip-like whorls.</p>
+<body><header><h1>✿ StatFlowers · Petal geometry lab</h1><a href="./index.html">← Main studio</a></header><main><div class="stage"><canvas id="view"></canvas><div id="overlay">Drag to rotate · pinch to zoom<br><span style="color:#8bd5ff">● Blue: flat baseline</span><br><span style="color:#ffb477">● Orange: normal-change proxy</span><br><span style="color:#b3f0a3">● Green: cotangent mean curvature</span></div></div><aside><h2>Experimental v0.2 prototype</h2><p>Compare three distinct treatments of the same petal shape: a flat baseline, a simple tangent-change curvature proxy, and a discrete cotangent-Laplacian mean-curvature estimator. The latter two share identical geometry for a fair visualization comparison.</p>
 <label for="flower">Flower</label><select id="flower"><option value="rose">Rose-like whorl</option><option value="tulip">Tulip-like whorl</option></select>
 <label for="layout">Experiment</label><select id="layout"><option value="pair">Side-by-side petals</option><option value="whorl">Full flower whorls</option></select>
-<label for="colorMode">Surface display</label><select id="colorMode"><option value="pigment">Pigment</option><option value="curvature">Approximate curvature</option></select>
+<label for="colorMode">Surface display</label><select id="colorMode"><option value="pigment">Pigment</option><option value="curvature">Method colors (blue / orange / green)</option><option value="heatmap">Curvature heatmaps (proxy vs cotangent)</option></select>
 <div id="sliders"></div>
 <div class="buttons" style="margin-top:16px"><button id="reset">Reset</button><button id="animate">▶ Bloom</button></div>
 <div class="metric" id="triangles"></div><div class="metric" id="timing"></div><div class="metric" id="fps"></div>
-<footer><strong>Scientific status:</strong> Curvature is a discrete normal-variation proxy, not a calibrated Gaussian or mean curvature measurement. Growth is interpolated geometry, not a biological differential-growth solver. Correlated variation is deterministic and illustrative. The baseline is a deliberately simplified comparison, not a reconstruction of the current production flower mesh. No collision or self-intersection guarantee is provided. Performance numbers are device-specific and exclude shader compilation.</footer>
+<footer><strong>Scientific status:</strong> The green method implements a discrete cotangent-weighted Laplace-Beltrami estimate of mean-curvature magnitude using barycentric vertex area. The orange method is an uncalibrated directional tangent-change proxy. Their scales differ and heatmaps use separate normalization. Growth is interpolated geometry, not a biological differential-growth solver. Correlated variation is deterministic and illustrative. The blue baseline is a deliberately simplified comparison, not a reconstruction of the current production flower mesh. No collision or self-intersection guarantee is provided. Performance numbers are device-specific and exclude shader compilation.</footer>
 </aside></main><script type="module">
 import * as THREE from 'three';
 const $=id=>document.getElementById(id), canvas=$('view');
@@ -42,8 +42,8 @@ function surface(t,u,phi,index,flat,flower){
  const y=.1+rise-(flower==='rose'?.18:.10)*growth*t*t+edge-cup*.06*(1-u*u)*Math.sin(Math.PI*t);
  return vec(radial*Math.cos(angular)-localX*Math.sin(angular),y,radial*Math.sin(angular)+localX*Math.cos(angular));
 }
-function createPetal(phi,index,flat,flower){
- const N=state.segments,M=Math.max(8,Math.round(N*.65)),vertices=[],indices=[],colors=[];
+function createPetal(phi,index,flat,flower,method){
+ const N=state.segments,M=Math.max(8,Math.round(N*.65)),vertices=[],indices=[],colors=[],proxies=[];
  const base=new THREE.Color(flower==='rose'?'#d63e58':'#f27c45');
  const sample=(t,u)=>surface(t,u,phi,index,flat,flower);
  for(let i=0;i<=N;i++)for(let j=0;j<=M;j++){const t=i/N,u=j/M*2-1,p=sample(t,u);vertices.push(p.x,p.y,p.z);
@@ -55,10 +55,33 @@ function createPetal(phi,index,flat,flower){
   const t1=sample(clamp(t+.027,0,1),clamp(u+.025,-1,1)).sub(next);
   const t0=sample(clamp(t-.027,0,1),clamp(u-.025,-1,1)).sub(prev);
   const curvature=clamp((1-t1.normalize().dot(t0.normalize()))*18,0,1);
-  const c=$('colorMode').value==='curvature'?new THREE.Color().setHSL(.64*(1-curvature),.9,.48):base.clone().offsetHSL(0,0,.07*Math.sin(index*1.7)+.05*(1-t));
-  colors.push(c.r,c.g,c.b);
+  proxies.push(curvature);
  }
  for(let i=0;i<N;i++)for(let j=0;j<M;j++){const a=i*(M+1)+j,b=a+M+1;indices.push(a,b,a+1,a+1,b,b+1)}
+ // Discrete cotangent Laplacian on the triangular mesh, with barycentric area.
+ // |H| = |sum_j (cot alpha + cot beta)(x_j-x_i)| / (4 A_i).
+ // Boundary vertices use the available incident triangles; boundary estimates are less stable.
+ const count=vertices.length/3,lap=new Float64Array(vertices.length),areas=new Float64Array(count);
+ const point=i=>vec(vertices[3*i],vertices[3*i+1],vertices[3*i+2]);
+ function edgeWeight(i,j,w){for(let k=0;k<3;k++){const d=vertices[3*j+k]-vertices[3*i+k];lap[3*i+k]+=w*d;lap[3*j+k]-=w*d}}
+ for(let k=0;k<indices.length;k+=3){const a=indices[k],b=indices[k+1],c=indices[k+2],A=point(a),B=point(b),C=point(c);
+  const ab=B.clone().sub(A),ac=C.clone().sub(A),bc=C.clone().sub(B),area=ab.clone().cross(ac).length()*.5;
+  if(area<1e-11)continue;areas[a]+=area/3;areas[b]+=area/3;areas[c]+=area/3;
+  const cotA=ab.dot(ac)/(2*area),cotB=A.clone().sub(B).dot(C.clone().sub(B))/(2*area),cotC=A.clone().sub(C).dot(B.clone().sub(C))/(2*area);
+  edgeWeight(b,c,cotA);edgeWeight(a,c,cotB);edgeWeight(a,b,cotC);
+ }
+ const magnitudes=Array.from({length:count},(_,i)=>areas[i]>1e-10?Math.hypot(lap[3*i],lap[3*i+1],lap[3*i+2])/(4*areas[i]):0);
+ const mode=$('colorMode').value;
+ const maxCurvature=Math.max(.0001,...magnitudes.filter(Number.isFinite));
+ for(let i=0;i<count;i++){
+  let c;
+  if(mode==='pigment'){c=new THREE.Color(method==='baseline'?'#72b7e5':method==='proxy'?'#f4a45c':'#8ed5a0')}
+  else if(mode==='curvature'){c=new THREE.Color(method==='baseline'?'#3794e9':method==='proxy'?'#ef903f':'#53c98c')}
+  else if(method==='baseline'){c=new THREE.Color('#3794e9')}
+  else{const value=method==='proxy'?proxies[i]:Math.min(1,magnitudes[i]/maxCurvature);
+   c=new THREE.Color().setHSL(method==='proxy'?.10+.10*(1-value):.38-.24*value,.85,.28+.32*value)}
+  colors.push(c.r,c.g,c.b);
+ }
  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.setIndex(indices);geo.computeVertexNormals();
  const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,side:THREE.DoubleSide,roughness:.87}));return mesh;
 }
@@ -68,9 +91,9 @@ function rebuild(){
  for(const m of [...group.children]){group.remove(m);m.traverse(o=>{o.geometry?.dispose();if(o.material)o.material.dispose()})}
  totalTriangles=0;const flower=$('flower').value,whorl=$('layout').value==='whorl';
  const count=whorl?(flower==='rose'?9:6):1;
- for(let side=0;side<2;side++){const flat=side===0;
-  for(let i=0;i<count;i++){const petal=createPetal(i*Math.PI*2/count+(i%2)*.05,i,flat,flower);
-   petal.position.x+=(side===0?-1:1)*(whorl?1.12:.85);
+ for(let side=0;side<3;side++){const flat=side===0,method=['baseline','proxy','cotangent'][side];
+  for(let i=0;i<count;i++){const petal=createPetal(i*Math.PI*2/count+(i%2)*.05,i,flat,flower,method);
+   petal.position.x+=(side-1)*(whorl?1.55:1.3);
    if(whorl){petal.rotation.y+=(i%2)*.04}
    group.add(petal);totalTriangles+=petal.geometry.index.count/3;
   }
@@ -79,7 +102,7 @@ function rebuild(){
  $('timing').textContent='Geometry rebuild: '+(performance.now()-t0).toFixed(1)+' ms';
  draw();
 }
-let az=.45,el=.35,dist=5.7;const pointers=new Map();let pinch=null;
+let az=.45,el=.35,dist=7.3;const pointers=new Map();let pinch=null;
 function pointerDistance(){const [a,b]=[...pointers.values()];return Math.hypot(a.x-b.x,a.y-b.y)}
 canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);if(pointers.size===2)pinch=pointerDistance()});
 canvas.addEventListener('pointermove',e=>{const prev=pointers.get(e.pointerId);if(!prev)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const next=pointerDistance();if(pinch)dist=clamp(dist*pinch/next,3,12);pinch=next}else if(pointers.size===1){az+=(e.clientX-prev.x)*.008;el=clamp(el+(e.clientY-prev.y)*.006,-.5,1.3)}draw()});
