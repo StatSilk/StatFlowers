@@ -4,10 +4,10 @@ Published preview: https://statsilk.github.io/StatFlowers/petal-lab.html
 
 ## Color legend
 - Blue: simplified flat baseline.
-- Orange: original directional tangent-change proxy.
-- Green: cotangent-weighted discrete mean-curvature magnitude.
+- Orange: original procedural shape in default mode; directional tangent-change proxy in heatmap mode.
+- Green: curvature-controlled heuristic shape in default mode; cotangent-weighted discrete mean-curvature magnitude in heatmap mode.
 
-Orange and green use the **same parametric petal mesh**; only the curvature estimation differs. In the heatmap setting, the two estimates are normalized independently and must not be interpreted as comparable absolute units.
+In default shape-comparison mode, orange uses the original procedural surface and green uses a deliberately more strongly cupped, rim-folded surface. This is a heuristic shape change, not a physical deformation obtained by solving curvature equations. In heatmap mode, orange and green use the **same procedural petal mesh**; only the curvature estimation differs. The two estimates are normalized independently and must not be interpreted as comparable absolute units.
 
 ## Method
 For a triangle mesh, each triangle contributes cotangents of its interior angles to weights on opposite edges. For vertex `i`, the discrete Laplace-Beltrami estimate is
