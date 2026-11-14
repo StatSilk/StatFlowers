@@ -360,7 +360,33 @@ function adjustCamera(){const target=new THREE.Vector3(0,.12,0);if(mode==='top')
 function render(){adjustCamera();renderer.render(scene,camera);const zv=document.getElementById('zoomValue');if(zv)zv.textContent=Math.round(500/zoom)+'%'}
 function resize(){const w=canvas.clientWidth,h=canvas.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();render()}
 new ResizeObserver(resize).observe(canvas);
-let pressed=false,startX=0,startY=0;canvas.addEventListener('pointerdown',e=>{pressed=true;startX=e.clientX;startY=e.clientY;canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointerup',()=>pressed=false);canvas.addEventListener('pointermove',e=>{if(!pressed)return;const dx=e.clientX-startX,dy=e.clientY-startY;startX=e.clientX;startY=e.clientY;if(mode==='top'){angleY+=dx*.004;}else{angleY+=dx*.009;angleX=Math.max(-.18,Math.min(1.3,angleX+dy*.007))}render()});canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(3.2,Math.min(8.5,zoom+e.deltaY*.003));render()},{passive:false});
+// Track active pointers so one finger rotates and two fingers pinch to zoom.
+const activePointers=new Map();let pinchDistance=null;
+function distanceBetweenPointers(){const [a,b]=[...activePointers.values()];return Math.hypot(a.x-b.x,a.y-b.y)}
+canvas.addEventListener('pointerdown',e=>{
+ if(e.pointerType==='mouse'&&e.button!==0)return;
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ canvas.setPointerCapture(e.pointerId);
+ if(activePointers.size===2)pinchDistance=distanceBetweenPointers();
+});
+canvas.addEventListener('pointermove',e=>{
+ const previous=activePointers.get(e.pointerId);if(!previous)return;
+ activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+ if(activePointers.size===2){
+  const nextDistance=distanceBetweenPointers();
+  if(pinchDistance!==null&&nextDistance>0){zoom=Math.max(3.2,Math.min(8.5,zoom*pinchDistance/nextDistance));render()}
+  pinchDistance=nextDistance;return;
+ }
+ if(activePointers.size!==1)return;
+ const dx=e.clientX-previous.x,dy=e.clientY-previous.y;
+ if(mode==='top'){angleY+=dx*.004;}else{angleY+=dx*.009;angleX=Math.max(-.18,Math.min(1.3,angleX+dy*.007))}render();
+});
+function endPointer(e){activePointers.delete(e.pointerId);pinchDistance=null;
+ if(activePointers.size===2)pinchDistance=distanceBetweenPointers();
+}
+canvas.addEventListener('pointerup',endPointer);
+canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('lostpointercapture',endPointer);canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(3.2,Math.min(8.5,zoom+e.deltaY*.003));render()},{passive:false});
 $('zoomOut').onclick=()=>{zoom=Math.min(8.5,zoom*.90**-1);render()};$('zoomIn').onclick=()=>{zoom=Math.max(3.2,zoom*.90);render()};
 $('topBtn').onclick=()=>setMode('top');$('sideBtn').onclick=()=>setMode('perspective');$('resetView').onclick=()=>{zoom=5.0;angleX=.47;angleY=.27;setMode('perspective');render()};
 function setFlower(type){stopGrowth();family=type;p={...presets[family]};zoom=type==='gerbera'?5.65:5.0;[...$('families').children].forEach(b=>b.classList.toggle('selected',b.dataset.id===type));buildControls();renderFlower()}
