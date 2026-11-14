@@ -3,10 +3,10 @@
 <style>
 :root{font:14px system-ui,sans-serif;color:#e8f5ee;background:#0d1e1a}*{box-sizing:border-box}body{margin:0}header{padding:13px 17px;display:flex;gap:15px;align-items:center;justify-content:space-between;border-bottom:1px solid #36564b}a{color:#a4e9bd}main{display:grid;grid-template-columns:minmax(0,1fr) 315px;min-height:calc(100dvh - 53px)}#view{width:100%;height:100%;min-height:520px;touch-action:none;display:block;background:#112620}aside{padding:15px;overflow:auto;border-left:1px solid #36564b}h1{font-size:17px;margin:0}h2{font-size:15px}p,small{color:#b5cbbd;line-height:1.5}label{display:flex;justify-content:space-between;gap:8px;margin-top:14px}input[type=range],select{width:100%;margin-top:7px;accent-color:#83d5a6}select,button{color:#ecf9ef;background:#224637;border:1px solid #507965;border-radius:8px;padding:9px}button{cursor:pointer}.buttons{display:flex;gap:6px;flex-wrap:wrap}.buttons button{flex:1}.active{background:#357c56}.metric{font-variant-numeric:tabular-nums;padding:8px 0;border-bottom:1px solid #345145}#overlay{position:absolute;top:70px;left:14px;background:#11291ecf;padding:10px;border-radius:9px;pointer-events:none;max-width:280px}.stage{position:relative;min-height:520px}footer{font-size:11px;color:#a9bdb0;margin-top:15px}@media(max-width:800px){main{display:block}.stage{height:62dvh;min-height:340px}#view{min-height:340px}aside{border-left:0;border-top:1px solid #36564b}header{flex-wrap:wrap}}
 </style><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.181.0/build/three.module.js"}}</script></head>
-<body><header><h1>✿ StatFlowers · Petal geometry lab</h1><a href="./index.html">← Main studio</a></header><main><div class="stage"><canvas id="view"></canvas><div id="overlay">Drag to rotate · pinch to zoom<br><span style="color:#8bd5ff">● Blue: flat baseline</span><br><span style="color:#ffb477">● Orange: procedural surface</span><br><span style="color:#b3f0a3">● Green: curvature-controlled surface</span></div></div><aside><h2>Experimental v0.2 prototype</h2><p>Default: compare three different petal shapes (flat, procedural, curvature-controlled). Switch to curvature heatmaps to compare two estimators on the same procedural geometry.</p>
+<body><header><h1>✿ StatFlowers · Petal geometry lab</h1><a href="./index.html">← Main studio</a></header><main><div class="stage"><canvas id="view"></canvas><div id="overlay">Drag to rotate · pinch to zoom<br><span style="color:#8bd5ff"><span style="color:#ffb477">● Orange: procedural surface</span><br><span style="color:#b3f0a3">● Green: curvature-controlled surface</span></div></div><aside><h2>Experimental v0.2 prototype</h2><p>Default: compare two different petal shapes (procedural and gently cupped). Switch to curvature heatmaps to compare two estimators on the same procedural geometry.</p>
 <label for="flower">Flower</label><select id="flower"><option value="rose">Rose-like whorl</option><option value="tulip">Tulip-like whorl</option></select>
 <label for="layout">Experiment</label><select id="layout"><option value="pair">Side-by-side petals</option><option value="whorl">Full flower whorls</option></select>
-<label for="colorMode">Surface display</label><select id="colorMode"><option value="pigment">Shape comparison, soft colors</option><option value="curvature">Shape comparison (blue / orange / green)</option><option value="heatmap">Curvature estimators (same shape)</option></select>
+<label for="colorMode">Surface display</label><select id="colorMode"><option value="pigment">Shape comparison, soft colors</option><option value="curvature">Shape comparison (orange / green)</option><option value="heatmap">Curvature estimators (same shape)</option></select>
 <div id="sliders"></div>
 <div class="buttons" style="margin-top:16px"><button id="reset">Reset</button><button id="animate">▶ Bloom</button></div>
 <div class="metric" id="triangles"></div><div class="metric" id="timing"></div><div class="metric" id="fps"></div>
@@ -39,11 +39,11 @@ function surface(t,u,phi,index,flat,flower,shapeMode){
  const edge=ruffle*.027*Math.pow(Math.abs(u),3)*Math.pow(t,2)*Math.sin(6*u+index*.61);
  const angular=phi+twist*.20*t*t+variation*.025*Math.sin(index*.7+3*t);
  const improved=shapeMode==="controlled";
- const controlledBend=improved?bend*.42*smooth(t)*smooth(t)*(1-.3*growth):0;
- const controlledCup=improved?cup*.32*u*u*Math.pow(Math.sin(Math.PI*t),.8):0;
- const rimFold=improved?(.16+.23*bend)*growth*smooth((t-.68)/.32):0;
+ const controlledBend=improved?bend*.16*smooth(t)*smooth(t)*(1-.3*growth):0;
+ const controlledCup=improved?cup*.12*u*u*Math.pow(Math.sin(Math.PI*t),.8):0;
+ const rimFold=improved?(.035+.055*bend)*growth*smooth((t-.78)/.22):0;
  const radial=.15+spread+longitudinal+transverse+controlledBend+controlledCup-rimFold;
- const y=.1+rise-(flower==='rose'?.18:.10)*growth*t*t+edge-cup*.06*(1-u*u)*Math.sin(Math.PI*t)+(improved?cup*.20*u*u*Math.sin(Math.PI*t)+bend*.14*Math.sin(Math.PI*t)*t:0);
+ const y=.1+rise-(flower==='rose'?.18:.10)*growth*t*t+edge-cup*.06*(1-u*u)*Math.sin(Math.PI*t)+(improved?cup*.08*u*u*Math.sin(Math.PI*t)+bend*.06*Math.sin(Math.PI*t)*t:0);
  return vec(radial*Math.cos(angular)-localX*Math.sin(angular),y,radial*Math.sin(angular)+localX*Math.cos(angular));
 }
 function createPetal(phi,index,flat,flower,method){
@@ -96,9 +96,9 @@ function rebuild(){
  for(const m of [...group.children]){group.remove(m);m.traverse(o=>{o.geometry?.dispose();if(o.material)o.material.dispose()})}
  totalTriangles=0;const flower=$('flower').value,whorl=$('layout').value==='whorl';
  const count=whorl?(flower==='rose'?9:6):1;
- for(let side=0;side<3;side++){const flat=side===0,method=['baseline','proxy','controlled'][side];
+ for(let side=0;side<2;side++){const flat=false,method=['proxy','controlled'][side];
   for(let i=0;i<count;i++){const petal=createPetal(i*Math.PI*2/count+(i%2)*.05,i,flat,flower,method);
-   petal.position.x+=(side-1)*(whorl?1.55:1.3);
+   petal.position.x+=(side===0?-1:1)*(whorl?1.12:.85);
    if(whorl){petal.rotation.y+=(i%2)*.04}
    group.add(petal);totalTriangles+=petal.geometry.index.count/3;
   }
@@ -107,7 +107,7 @@ function rebuild(){
  $('timing').textContent='Geometry rebuild: '+(performance.now()-t0).toFixed(1)+' ms';
  draw();
 }
-let az=.45,el=.35,dist=7.3;const pointers=new Map();let pinch=null;
+let az=.45,el=.35,dist=5.7;const pointers=new Map();let pinch=null;
 function pointerDistance(){const [a,b]=[...pointers.values()];return Math.hypot(a.x-b.x,a.y-b.y)}
 canvas.addEventListener('pointerdown',e=>{pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);if(pointers.size===2)pinch=pointerDistance()});
 canvas.addEventListener('pointermove',e=>{const prev=pointers.get(e.pointerId);if(!prev)return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const next=pointerDistance();if(pinch)dist=clamp(dist*pinch/next,3,12);pinch=next}else if(pointers.size===1){az+=(e.clientX-prev.x)*.008;el=clamp(el+(e.clientY-prev.y)*.006,-.5,1.3)}draw()});
